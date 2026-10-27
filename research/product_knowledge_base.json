@@ -1,0 +1,395 @@
+{
+  "schema_version": "1.0",
+  "title": "WaterScience verified support knowledge base - research prototype",
+  "last_researched": "2026-10-28",
+  "intended_use": "Retrieval source for AI-drafted customer-support replies that require human approval. It is not a policy engine and must not authorize refunds, replacements, warranty claims or medical outcomes.",
+  "guardrails": [
+    "Return only facts whose product applicability matches the identified SKU or product family.",
+    "When the purchase channel is not WaterScience.in, do not apply the WaterScience.in shipping or returns policy.",
+    "Do not promise health, hair or skin outcomes. The current replacement-cartridge page itself says CLEO is not a medical device and hair fall can have other causes.",
+    "When source records conflict, say that the information needs confirmation and create a human-review task.",
+    "For leaks, electrical/plumbing risks, damaged products, warranty determinations, returns/refunds, or suspected safety issues: collect evidence and escalate."
+  ],
+  "sources": {
+    "S01": {
+      "title": "Hard Water Filter for Shower and Tap - CLEO Shower & Tap Filter",
+      "url": "https://www.waterscience.in/products/shower-tap-filter-cleo-sfu-717",
+      "type": "official product page",
+      "accessed": "2026-10-28"
+    },
+    "S02": {
+      "title": "CLEO Replacement Cartridge for Shower & Tap Filters",
+      "url": "https://www.waterscience.in/products/replacement-cartridge-filter",
+      "type": "official product page",
+      "accessed": "2026-10-28"
+    },
+    "S03": {
+      "title": "Warranty & Support",
+      "url": "https://www.waterscience.in/pages/warranty-support-1",
+      "type": "official policy page",
+      "accessed": "2026-10-28"
+    },
+    "S04": {
+      "title": "Returns & Refund",
+      "url": "https://www.waterscience.in/pages/returns-refund",
+      "type": "official policy page",
+      "accessed": "2026-10-28"
+    },
+    "S05": {
+      "title": "Billing & Shipping Policy",
+      "url": "https://www.waterscience.in/pages/billing-shipping-policy-new",
+      "type": "official policy page",
+      "accessed": "2026-10-28"
+    },
+    "S06": {
+      "title": "Washing Machine Filter for Hard Water - IRIS-WMF-325",
+      "url": "https://www.waterscience.in/products/washing-machine-filter-for-hard-water-replaceable-cartridge",
+      "type": "official product page",
+      "accessed": "2026-10-28"
+    },
+    "S07": {
+      "title": "KTF Kitchen Tap Extender with Sediment and Dust Filter",
+      "url": "https://www.waterscience.in/products/kitchen-tap-extender-with-filter-wide-ceramic-cartridge",
+      "type": "official product page",
+      "accessed": "2026-10-28"
+    },
+    "S08": {
+      "title": "RENO Cygnus Water Softeners",
+      "url": "https://www.waterscience.in/products/water-softener",
+      "type": "official product page",
+      "accessed": "2026-10-28"
+    },
+    "S09": {
+      "title": "India's 1st Self-cleaning Health Faucet - PURO HFS-625",
+      "url": "https://www.waterscience.in/products/waterscience-water-saving-health-faucet-neverblock-technology-puro-hfs-625-c",
+      "type": "official product page",
+      "accessed": "2026-10-28"
+    },
+    "S10": {
+      "title": "WaterScience replacement cartridges collection",
+      "url": "https://www.waterscience.in/collections/replacement-cartridges",
+      "type": "official collection page",
+      "accessed": "2026-10-28"
+    },
+    "M01": {
+      "title": "CLEO 2 Manual pages Sep11 PDF",
+      "url": "https://m.media-amazon.com/images/I/B1xekuVv3HS.pdf",
+      "type": "legacy manual mirror, not current WaterScience domain",
+      "accessed": "2026-10-28",
+      "use_restriction": "Do not present detailed troubleshooting as current verified instructions without human confirmation."
+    }
+  },
+  "portfolio_map": [
+    {
+      "category": "Shower and tap filters",
+      "representative_products": ["CLEO SFU-717", "CLEO multi-flow filters", "CLEO Kiddo hand shower filters"],
+      "replacement_or_accessory_examples": ["CLEO Metro/Municipal cartridge", "CLEO Borewell/Tanker cartridge", "tap aerator adapters"],
+      "prototype_status": "in_scope",
+      "reason": "The initial product and its current official documentation are well covered."
+    },
+    {
+      "category": "Appliance filters",
+      "representative_products": ["IRIS-WMF-325 washing-machine filter"],
+      "replacement_or_accessory_examples": ["IRIS-WMF-325 pack-of-two cartridge", "washing-machine descaler tablets"],
+      "prototype_status": "in_scope_limited",
+      "reason": "Clear compatibility and replacement guidance make it a low-effort second product family."
+    },
+    {
+      "category": "Kitchen tap filters and extenders",
+      "representative_products": ["FLO-KTF-723 Wide ceramic", "FLO-KTF-623 Mini", "AERA Compact/Wide/Flexi aerators"],
+      "replacement_or_accessory_examples": ["kitchen tap filter ceramic cartridge", "aerator adapters and washers"],
+      "prototype_status": "knowledge_only",
+      "reason": "Variants differ by fitment and some pages combine variants; include only explicit SKU facts."
+    },
+    {
+      "category": "Mainline filters and whole-home softeners",
+      "representative_products": ["RIO mainline filters", "RENO Cygnus", "RENO Aquilius", "RENO Altius"],
+      "replacement_or_accessory_examples": ["mainline replacement cartridges", "softener salt", "prefilter", "installation/service visit"],
+      "prototype_status": "escalate_to_consultation",
+      "reason": "Fitment, home configuration, location and installation scope need consultation."
+    },
+    {
+      "category": "Health faucets and cleaning products",
+      "representative_products": ["PURO HFS-625", "PURO two-flow faucets", "washing-machine descaler tablets"],
+      "replacement_or_accessory_examples": ["additional faucet cartridge filter", "mesh washer", "teflon tape"],
+      "prototype_status": "knowledge_only",
+      "reason": "Useful for product detection and escalation but not needed for the first 3-4 hour working demo."
+    }
+  ],
+  "products": {
+    "CLEO_SFU_717": {
+      "name": "CLEO Shower & Tap Filter for Hard Water",
+      "aliases": ["CLEO SFU-717", "SFU 717", "CLEO shower/tap filter"],
+      "applicability": "Exact CLEO SFU-717 only unless another CLEO model is explicitly named by an applicable source.",
+      "verified_facts": [
+        {
+          "id": "cleo.fitment",
+          "fact": "Fits metal-threaded taps, showers and hand showers; named tap sizes are 22 mm, 24 mm and 28 mm. Does not fit plastic taps.",
+          "source_ids": ["S01"],
+          "confidence": "high"
+        },
+        {
+          "id": "cleo.cartridge_selection",
+          "fact": "Municipal/Metro is described for chlorine and moderate hardness; Borewell/Tanker for high hardness with no chlorine.",
+          "source_ids": ["S01"],
+          "confidence": "high"
+        },
+        {
+          "id": "cleo.maintenance",
+          "fact": "The product page recommends cartridge replacement every six months, varying with usage and water quality.",
+          "source_ids": ["S01"],
+          "confidence": "high"
+        },
+        {
+          "id": "cleo.tds",
+          "fact": "The product page says tap and shower filters do not reduce TDS.",
+          "source_ids": ["S01"],
+          "confidence": "high"
+        },
+        {
+          "id": "cleo.installation",
+          "fact": "The page says the product installs in under three minutes and includes an installation kit; customers can use its linked video or contact support.",
+          "source_ids": ["S01"],
+          "confidence": "high"
+        }
+      ],
+      "conditional_guidance": [
+        {
+          "condition": "Customer asks which cartridge to select",
+          "collect_first": ["water source", "whether chlorine is expected", "TDS reading if available", "exact product/model"],
+          "action": "Draft a recommendation only when the documented condition matches; otherwise ask for clarification or human review.",
+          "source_ids": ["S01", "S02"]
+        },
+        {
+          "condition": "Customer says TDS did not fall",
+          "action": "Explain that the official product page says TDS is not reduced. Do not diagnose water safety or promise performance.",
+          "source_ids": ["S01"]
+        },
+        {
+          "condition": "Customer reports low flow",
+          "action": "State that the current cartridge FAQ attributes a drop to sediment blocking and refers to reverse flushing; direct to official support/video for the exact current procedure. Escalate if unresolved.",
+          "source_ids": ["S02"],
+          "uncertainty": "The legacy manual has more steps but is not current-domain verified."
+        }
+      ],
+      "conflicts": [
+        {
+          "topic": "Maximum hot-water temperature",
+          "records": [
+            {"value": "45°C; cold water first", "source_ids": ["S01"]},
+            {"value": "60°C; cold water first", "source_ids": ["S02"]}
+          ],
+          "safe_action": "Do not answer automatically. Flag a documentation conflict and request support confirmation."
+        },
+        {
+          "topic": "Replacement timing",
+          "records": [
+            {"value": "every six months, varies by use/water quality", "source_ids": ["S01"]},
+            {"value": "4-6 months and separately every six months", "source_ids": ["S02"]}
+          ],
+          "safe_action": "Use a 4-6 month guidance range plus condition caveat; do not call it a warranty entitlement."
+        }
+      ],
+      "escalate_when": ["fixture material/thread size is unknown", "leak is reported", "temperature question", "cartridge type cannot be matched", "health/medical claim", "warranty/return/replacement request"]
+    },
+    "CLEO_REPLACEMENT_CARTRIDGE": {
+      "name": "CLEO Replacement Cartridge for Shower & Tap Filters",
+      "aliases": ["CLEO RC", "CLEO cartridge", "SFC-UW-100-HHC"],
+      "verified_facts": [
+        {
+          "id": "cleo_rc.compatibility",
+          "fact": "The page names compatible CLEO models: SFU-717, SFU-1020, SFM-419, SFA-520, SFS-423, SFR-923, SFR-519, Kiddo Duo and SFW-815.",
+          "source_ids": ["S02"],
+          "confidence": "high"
+        },
+        {
+          "id": "cleo_rc.selection",
+          "fact": "Metro/Municipal: chlorine and hardness, TDS below 800 ppm. Borewell/Tanker: high hardness with no chlorine, TDS up to 1800 ppm.",
+          "source_ids": ["S02"],
+          "confidence": "high"
+        },
+        {
+          "id": "cleo_rc.installation",
+          "fact": "The FAQ says to insert the replacement red side up and run water for a couple of minutes after replacement to flush carbon dust.",
+          "source_ids": ["S02"],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": ["model is not on compatibility list", "cartridge does not seat", "leak occurs after replacement", "hot-water question", "customer asks for a refund/replacement"]
+    },
+    "IRIS_WMF_325": {
+      "name": "Washing Machine Filter for Hard Water - IRIS-WMF-325",
+      "aliases": ["IRIS washing machine filter", "WMF-325"],
+      "verified_facts": [
+        {
+          "id": "iris.fitment",
+          "fact": "The page says the supplied hose adapter supports all brands' automatic top- and front-load machines; inlet connects to 1/2-inch BSP and 1/2-inch or 24-mm externally threaded taps.",
+          "source_ids": ["S06"],
+          "confidence": "high"
+        },
+        {
+          "id": "iris.replacement",
+          "fact": "Replacement guidance: top-load 3-4 months and front-load 4-6 months, depending on machine and water quality.",
+          "source_ids": ["S06"],
+          "confidence": "high"
+        },
+        {
+          "id": "iris.warranty",
+          "fact": "Product page lists a one-year warranty.",
+          "source_ids": ["S06"],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": ["machine is not automatic", "tap type cannot be identified", "leak/damage", "warranty decision"]
+    },
+    "KTF_WIDE_CERAMIC": {
+      "name": "KTF Kitchen Tap Extender with Sediment and Dust Filter - Wide ceramic cartridge",
+      "aliases": ["FLO-KTF-723", "KTF Wide"],
+      "verified_facts": [
+        {
+          "id": "ktf.wide.fitment",
+          "fact": "Wide variant page lists 20, 22 and 24 mm male/female aerators and hot-water compatibility up to 40°C.",
+          "source_ids": ["S07"],
+          "confidence": "high"
+        },
+        {
+          "id": "ktf.wide.box",
+          "fact": "The page lists tap filter, aerator, adapter, washers and two replacement cartridges.",
+          "source_ids": ["S07"],
+          "confidence": "high"
+        }
+      ],
+      "uncertainty": "This product page also shows a Mini variant. Do not transfer Wide specifications to Mini without separate evidence.",
+      "escalate_when": ["customer has Mini or unknown KTF variant", "26-mm or plastic/no-aerator tap", "potable-water question", "leak/damage"]
+    },
+    "RENO_CYGNUS": {
+      "name": "RENO Cygnus Water Softener",
+      "aliases": ["RENO Cygnus", "RENO 1500", "RENO 2000"],
+      "verified_facts": [
+        {
+          "id": "reno.contents",
+          "fact": "Product page lists the softener, prefilter casing/sediment filter, connecting accessories, stand, starter salt and hardness kit; input/output plumbing material is not included.",
+          "source_ids": ["S08"],
+          "confidence": "high"
+        },
+        {
+          "id": "reno.warranty",
+          "fact": "Product page lists two years for valve and electronics; physical damage is not covered.",
+          "source_ids": ["S08"],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": ["product recommendation", "installation estimate", "home sizing", "location/serviceability", "fault/warranty"]
+    },
+    "PURO_HFS_625": {
+      "name": "PURO HFS-625 self-cleaning health faucet",
+      "aliases": ["NeverBlock health faucet", "PURO HFS-625"],
+      "verified_facts": [
+        {
+          "id": "puro.fitment",
+          "fact": "Fits standard 1/2-inch hoses.",
+          "source_ids": ["S09"],
+          "confidence": "high"
+        },
+        {
+          "id": "puro.warranty",
+          "fact": "The page lists a two-year warranty for the faucet that covers breakage and damages.",
+          "source_ids": ["S09"],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": ["leak", "fault", "breakage", "warranty assessment"]
+    }
+  },
+  "policy_facts": {
+    "warranty": {
+      "applicability": "Use to explain the documented process; human team decides eligibility.",
+      "facts": [
+        {
+          "fact": "Warranty requires registration within seven days with serial number or a valid invoice; the company may request photos/videos.",
+          "source_ids": ["S03"]
+        },
+        {
+          "fact": "CLEO shower-filter cartridges have a 90-day manufacturing-defect warranty, excluding sediment choking and prolonged disuse among other exclusions.",
+          "source_ids": ["S03"]
+        }
+      ]
+    },
+    "returns_and_refunds": {
+      "applicability": "WaterScience website purchases only. Never apply to Amazon, quick-commerce, retail or marketplace orders without the relevant channel policy.",
+      "facts": [
+        {
+          "fact": "CLEO website purchases have a stated 60-day return policy; other website products generally have seven days, subject to stated conditions.",
+          "source_ids": ["S04"]
+        },
+        {
+          "fact": "The policy names damaged/defective items or a different item received as return conditions and requests photo/video evidence for damage or difference.",
+          "source_ids": ["S04"]
+        },
+        {
+          "fact": "Eligible refund initiation is stated as within seven working days after the applicable request or post-delivery pickup; a Rs. 99 pickup charge may apply.",
+          "source_ids": ["S04"]
+        }
+      ]
+    },
+    "shipping": {
+      "applicability": "WaterScience website orders only; estimate, not a guarantee.",
+      "facts": [
+        {
+          "fact": "Most orders are stated to dispatch in 2-3 business days, then take 3-4 business days in Bengaluru or 5-6 elsewhere in India, subject to location and delivery-partner factors.",
+          "source_ids": ["S05"]
+        }
+      ]
+    },
+    "support_channels": {
+      "facts": [
+        {
+          "fact": "General after-sales support: care@waterscience.in, 1800-121-0599, WhatsApp 9148545840; Monday-Saturday, 09:30-20:30.",
+          "source_ids": ["S03"]
+        },
+        {
+          "fact": "The returns page gives Mon-Sat, 09:30-18:30 for a return request call.",
+          "source_ids": ["S04"]
+        }
+      ]
+    }
+  },
+  "routing_rules": [
+    {
+      "rule_id": "R01",
+      "if": "product/SKU or variant is unknown",
+      "ask_for": ["product name/model from label or order", "photo if customer consents", "purchase channel"],
+      "route": "clarification"
+    },
+    {
+      "rule_id": "R02",
+      "if": "compatibility request",
+      "ask_for": ["fixture type", "thread size or photo", "metal/plastic", "water source when cartridge type matters"],
+      "route": "verified-answer only when exact product record matches"
+    },
+    {
+      "rule_id": "R03",
+      "if": "return/refund/replacement/warranty request",
+      "ask_for": ["purchase channel", "order/invoice", "delivery/purchase date", "photos/videos for damage where applicable"],
+      "route": "human escalation; draft may explain documented process but must not decide outcome"
+    },
+    {
+      "rule_id": "R04",
+      "if": "leak, damage, unsafe installation or unresolved loss of flow",
+      "ask_for": ["whether water can be safely shut off", "photos/video", "SKU", "date of purchase"],
+      "route": "human escalation"
+    },
+    {
+      "rule_id": "R05",
+      "if": "medical, dermatological or hair-loss outcome request",
+      "ask_for": [],
+      "route": "avoid medical promises; say the product is not a medical device and escalate any safety concern"
+    },
+    {
+      "rule_id": "R06",
+      "if": "source conflict is attached to retrieved fact",
+      "ask_for": [],
+      "route": "human escalation with both source IDs displayed"
+    }
+  ]
+}

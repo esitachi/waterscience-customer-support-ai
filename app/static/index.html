@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaterScience AI Customer Support — Agent Review Console</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-group">
+                <div class="logo-icon">💧</div>
+                <div>
+                    <h1 class="logo-title">WaterScience</h1>
+                    <span class="logo-subtitle">Customer Service AI Assist — Problem 2 Prototype</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="badge badge-outline" id="env-badge">Provider: Mock (Offline)</span>
+            <span class="badge badge-success" id="kb-badge">KB: 10 Sources Loaded</span>
+            <div class="approval-notice">
+                <span class="lock-icon">🔒</span>
+                <span>Mandatory Human Oversight</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- Navigation Tabs -->
+        <nav class="tabs-nav">
+            <button class="tab-btn active" id="tab-live-btn" onclick="switchTab('live')">
+                <span class="tab-icon">💬</span> Live Query Console
+            </button>
+            <button class="tab-btn" id="tab-synthetic-btn" onclick="switchTab('synthetic')">
+                <span class="tab-icon">🧪</span> Synthetic Test Benchmark (20 Cases)
+            </button>
+            <button class="tab-btn" id="tab-kb-btn" onclick="switchTab('kb')">
+                <span class="tab-icon">📚</span> Evidence & Knowledge Base
+            </button>
+        </nav>
+
+        <!-- Tab 1: Live Query Console -->
+        <section id="tab-live" class="tab-content active">
+            <div class="console-grid">
+                <!-- Left: Query Input & Presets -->
+                <div class="card query-input-card">
+                    <div class="card-header">
+                        <h2>1. Incoming Customer Message</h2>
+                        <span class="step-badge">Input</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preset-select">Load Synthetic Benchmark Case:</label>
+                        <select id="preset-select" class="form-control" onchange="loadPresetCase()">
+                            <option value="">-- Choose a benchmark case or enter custom --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer-message">Customer Message (English / Hinglish):</label>
+                        <textarea id="customer-message" class="form-control" rows="4" placeholder="Enter customer WhatsApp message or email inquiry..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col">
+                            <label for="product-hint">Product Hint (Optional):</label>
+                            <input type="text" id="product-hint" class="form-control" placeholder="e.g. CLEO SFU-717">
+                        </div>
+                        <div class="form-group col">
+                            <label for="purchase-channel">Purchase Channel:</label>
+                            <select id="purchase-channel" class="form-control">
+                                <option value="">Auto-detect from message</option>
+                                <option value="waterscience_website">WaterScience Website</option>
+                                <option value="amazon">Amazon India</option>
+                                <option value="flipkart">Flipkart</option>
+                                <option value="quick_commerce">Quick Commerce (Zepto/Blinkit)</option>
+                                <option value="retail">Retail / Offline</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col">
+                            <label for="order-id">Order ID (Optional):</label>
+                            <input type="text" id="order-id" class="form-control" placeholder="e.g. WS-98421">
+                        </div>
+                        <div class="form-group col submit-col">
+                            <button class="btn btn-primary btn-block" id="process-btn" onclick="processQuery()">
+                                <span>⚡ Process with AI Pipeline</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="policy-reminder">
+                        <strong>Safety Note:</strong> AI drafts are never sent directly to customers. An agent must review, edit if necessary, and approve each message.
+                    </div>
+                </div>
+
+                <!-- Right: AI Review Card -->
+                <div class="card review-card" id="review-card">
+                    <div class="card-header">
+                        <h2>2. Agent Review & Human Oversight Card</h2>
+                        <span class="step-badge" id="approval-pill">Pending Query</span>
+                    </div>
+
+                    <div id="empty-state" class="empty-state">
+                        <div class="empty-icon">📨</div>
+                        <p>Submit a customer message or select a benchmark case to generate an evidence-backed draft and safety review card.</p>
+                    </div>
+
+                    <div id="result-container" class="result-container" style="display: none;">
+                        <!-- Status Banners -->
+                        <div class="status-banner" id="status-banner">
+                            <div class="status-indicator-dot" id="status-dot"></div>
+                            <div class="status-details">
+                                <h3 id="status-title">Status Title</h3>
+                                <p id="status-desc">Status description</p>
+                            </div>
+                        </div>
+
+                        <!-- Classification Meta Grid -->
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <span class="meta-label">Detected Product</span>
+                                <span class="meta-val" id="meta-product">-</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Issue Category</span>
+                                <span class="meta-val" id="meta-category">-</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Purchase Channel</span>
+                                <span class="meta-val" id="meta-channel">-</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Escalation Flag</span>
+                                <span class="meta-val" id="meta-escalation">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Missing Information Checklist -->
+                        <div class="info-block" id="missing-info-block" style="display: none;">
+                            <h4 class="block-title">📋 Information Required Before Final Resolution</h4>
+                            <ul class="checklist" id="missing-info-list"></ul>
+                        </div>
+
+                        <!-- Applied Guardrails -->
+                        <div class="info-block" id="guardrails-block" style="display: none;">
+                            <h4 class="block-title">🛡️ Safety Guardrails Triggered</h4>
+                            <ul class="guardrail-tags" id="guardrails-list"></ul>
+                        </div>
+
+                        <!-- Supporting Source Citations -->
+                        <div class="info-block">
+                            <h4 class="block-title">🔗 Supporting Evidence & Verified Sources</h4>
+                            <div class="citations-container" id="citations-list"></div>
+                        </div>
+
+                        <!-- Editable Draft Response -->
+                        <div class="draft-block">
+                            <div class="draft-header">
+                                <h4 class="block-title">✍️ Draft Response (Agent may edit before sending)</h4>
+                                <span class="char-count" id="char-count"></span>
+                            </div>
+                            <textarea id="draft-textarea" class="form-control draft-textarea" rows="6"></textarea>
+                        </div>
+
+                        <!-- Reviewer Actions -->
+                        <div class="review-actions">
+                            <div class="form-group reviewer-comment-group">
+                                <input type="text" id="reviewer-comment" class="form-control" placeholder="Optional audit note or reason for modification...">
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-success" onclick="updateApproval('approve')">
+                                    ✓ Approve Reply
+                                </button>
+                                <button class="btn btn-secondary" onclick="updateApproval('edit')">
+                                    💾 Save Custom Edits
+                                </button>
+                                <button class="btn btn-danger" onclick="updateApproval('reject')">
+                                    ✕ Reject Draft
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Synthetic Benchmark (20 Cases) -->
+        <section id="tab-synthetic" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Synthetic Test Suite Benchmark (20 Ground Truth Cases)</h2>
+                        <p class="section-desc">Automated validation against all 20 cases from <code>synthetic_support_cases.json</code>, testing product matching, tap compatibility, TDS expectations, source conflicts, channel boundaries, medical claims, and mandatory human approval.</p>
+                    </div>
+                    <button class="btn btn-primary" id="run-benchmark-btn" onclick="runBenchmark()">
+                        ▶ Run All 20 Cases
+                    </button>
+                </div>
+
+                <!-- Test Summary Cards -->
+                <div class="benchmark-summary-grid">
+                    <div class="summary-metric">
+                        <span class="metric-num" id="total-cases-count">20</span>
+                        <span class="metric-label">Total Test Cases</span>
+                    </div>
+                    <div class="summary-metric success">
+                        <span class="metric-num" id="passed-cases-count">-</span>
+                        <span class="metric-label">Passed</span>
+                    </div>
+                    <div class="summary-metric danger">
+                        <span class="metric-num" id="failed-cases-count">-</span>
+                        <span class="metric-label">Failed</span>
+                    </div>
+                    <div class="summary-metric info">
+                        <span class="metric-num" id="escalated-cases-count">-</span>
+                        <span class="metric-label">Safely Escalated</span>
+                    </div>
+                </div>
+
+                <!-- Test Cases Table -->
+                <div class="table-responsive">
+                    <table class="benchmark-table">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Customer Message</th>
+                                <th>Product</th>
+                                <th>Issue Category</th>
+                                <th>Escalation</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="benchmark-table-body">
+                            <tr>
+                                <td colspan="7" class="text-center">Click "Run All 20 Cases" to execute the test suite benchmark.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Knowledge Base & Evidence Register -->
+        <section id="tab-kb" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Verified Knowledge Base & Source Evidence Registry</h2>
+                    <span class="step-badge">Research Register</span>
+                </div>
+                <p class="section-desc">All facts and policy rules are strictly derived from official WaterScience product and policy pages accessed on 28 October 2026. Amazon India marketplace review and Q&A content was inaccessible and is intentionally excluded to prevent hallucination.</p>
+                <div class="kb-grid" id="kb-sources-grid">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for Detailed Case Inspection -->
+    <div class="modal" id="case-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Case Evaluation Details</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Details injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
