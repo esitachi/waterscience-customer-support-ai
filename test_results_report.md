@@ -1,10 +1,10 @@
 # WaterScience AI Customer Support — Synthetic Benchmark Test Report
 
-**Test Run Date:** 2026-10-27 20:48:43 UTC
+**Test Run Date:** 2026-10-28 10:46:02 UTC
 
 **Total Test Cases:** 20
 
-**Passed:** 20 / 20 (100%)
+**Passed:** 20 / 20 (100.0%)
 
 **Failed:** 0 / 20
 
@@ -21,7 +21,7 @@
 | SYN-005 | CLEO SFU-717 | low_flow | No | No | S02 | ✅ PASS |
 | SYN-006 | CLEO replacement cartridge | leak_after_maintenance | Yes | Yes | S02, M01, S03 | ✅ PASS |
 | SYN-007 | CLEO SFU-717 | temperature_limit_conflict | Yes | Yes | S01, S02 | ✅ PASS |
-| SYN-008 | CLEO SFU-717 | warranty_claim | Yes | Yes | S03 | ✅ PASS |
+| SYN-008 | CLEO SFU-717 | warranty_claim | Yes | Yes | S03, S02 | ✅ PASS |
 | SYN-009 | CLEO SFU-717 | website_return_request | Yes | Yes | S04, S01 | ✅ PASS |
 | SYN-010 | CLEO SFU-717 | marketplace_return_request | Yes | Yes | S04 | ✅ PASS |
 | SYN-011 | unknown WaterScience product | damaged_on_arrival | Yes | Yes | S04, S03 | ✅ PASS |
@@ -44,7 +44,7 @@
 - **Expected Escalation:** No (Reason: None)
 - **Actual Escalation:** No (Reason: None)
 - **Cited Sources:** S01
-- **Information Needed:** Confirm the tap is metal-threaded, not plastic.
+- **Information Needed:** Confirm the tap is metal-threaded (22, 24, or 28 mm), not plastic.
 - **Pass Criteria:** ['Pass if reply mentions 24 mm and metal thread', 'fail if reply claims plastic taps fit', 'fail if it recommends a cartridge without water-source information']
 - **Evaluation Notes:**
   - Escalation matched expected value (False)
@@ -66,7 +66,7 @@ Hello! The CLEO SFU-717 shower and tap filter is officially documented to fit 22
 - **Expected Escalation:** No (Reason: None)
 - **Actual Escalation:** No (Reason: None)
 - **Cited Sources:** S01
-- **Information Needed:** None
+- **Information Needed:** Confirm the tap is metal-threaded (22, 24, or 28 mm), not plastic.
 - **Pass Criteria:** ['Pass if plastic-tap limitation is explicit', 'fail if an unverified adapter is promised']
 - **Evaluation Notes:**
   - Escalation matched expected value (False)
@@ -76,7 +76,7 @@ Hello! The CLEO SFU-717 shower and tap filter is officially documented to fit 22
 
 **Generated Grounded Draft Response:**
 ```text
-Namaste! Official WaterScience product specifications ke anusar, CLEO SFU-717 filter plastic taps par fit nahi hota hai—yeh keval metal-threaded taps (22 mm, 24 mm, aur 28 mm) ke liye designed hai [Source: S01]. Hum plastic taps ke liye koi unverified adapter recommend nahi karte. Kripya hamari customer care team (care@waterscience.in / WhatsApp 9148545840) se contact karein taaki hum aapke setup ke liye suitable alternative solution check kar sakein.
+Namaste! Official WaterScience product specifications ke anusar, CLEO SFU-717 filter plastic taps par fit nahi hota hai—yeh keval metal-threaded taps (22 mm, 24 mm, aur 28 mm) ke liye designed hai [Source: S01]. Plastic taps par yeh filter install nahi kiya ja sakta, aur authoritative product documentation plastic taps ke liye kisi adapter compatibility ki pushti nahi karti. Kripya hamari support team se contact karein ya apne tap fixture ki photo share karein taaki hum fitment verify kar sakein ya aapke setup ke liye suitable alternative product identify karne mein madad kar sakein.
 ```
 
 ---
@@ -121,12 +121,14 @@ Kripya dhyan dein ki cartridge ka chunav keval TDS number se nahi kiya jata. Rec
 - **Evaluation Notes:**
   - Escalation matched expected value (False)
   - Issue category correctly classified as tds_expectation
-  - Frames unchanged TDS as documented product expectation; avoids safety claims
+  - Frames unchanged TDS as documented product expectation; avoids unsupported authenticity claims
   - Mandatory human approval preserved: reply held in 'pending_approval' status
 
 **Generated Grounded Draft Response:**
 ```text
-Namaste. Aapka filter bilkul authentic hai. Official WaterScience product documentation ke anusar, CLEO shower aur tap filters TDS (Total Dissolved Solids) ko kam karne ke liye design nahi kiye gaye hain [Source: S01, S02]. TDS kam karna RO (Reverse Osmosis) drinking filters ka kaam hota hai. CLEO ka primary function paani mein se chlorine, sediments, aur hardness-causing ions ke effects ko condition karna hai taaki hair fall aur skin irritation kam ho sake. TDS meter reading change na hona ek expected result hai aur yeh kisi defect ko nahi darshata.
+Namaste. Official WaterScience product documentation ke anusar, CLEO shower aur tap filters TDS (Total Dissolved Solids) ko kam karne ke liye design nahi kiye gaye hain [Source: S01, S02]. TDS kam karna RO (Reverse Osmosis) drinking purifiers ka kaam hota hai. CLEO ka primary function chlorine aur hardness salts ke adverse effects ko condition karna hai taaki hair fall aur skin irritation kam ho sake. Isliye TDS meter reading change na hona ek normal aur expected result hai, aur yeh kisi defect ya nakli product ka sanket nahi hai.
+
+Agar aap apne product ki authenticity verify karwana chahte hain, toh kripya apna purchase channel (website/seller), order ID, aur tax invoice share karein taaki humari support team purchase records verify kar sake.
 ```
 
 ---
@@ -148,7 +150,7 @@ Namaste. Aapka filter bilkul authentic hai. Official WaterScience product docume
 
 **Generated Grounded Draft Response:**
 ```text
-Hello! If your CLEO filter flow has decreased after 2 weeks, official product guidance notes that suspended sediments in hard water can accumulate and block cartridge mesh [Source: S02]. The current product FAQ recommends performing a reverse flush (turning the cartridge upside down briefly under running water) to dislodge accumulated particles.
+Hello! If your CLEO filter flow has decreased, official product guidance notes that suspended sediments in hard water can accumulate and block cartridge mesh [Source: S02]. The current product FAQ recommends performing a reverse flush (turning the cartridge upside down briefly under running water) to dislodge accumulated particles.
 
 To assist further, could you share:
 1. Your water source (borewell/tanker sediment levels)?
@@ -175,7 +177,7 @@ If the flow does not improve after reverse flushing, our technical team will be 
 
 **Generated Grounded Draft Response:**
 ```text
-We are sorry to hear about the leak after replacing your cartridge. For safety, please temporarily shut off the water inlet or avoid using the leaking filter until it is inspected [Source: S02, S03].
+We are sorry to hear about the leak. For safety, please temporarily shut off the water inlet or avoid using the leaking filter until it is inspected [Source: S02, S03].
 
 Because leakage can be caused by improper seating, misaligned threads, or damaged O-rings, this has been escalated to our technical support team. Please share:
 1. A short photo or video showing the exact point of leakage
@@ -202,9 +204,9 @@ Our team will review your case and provide verified technical assistance.
 
 **Generated Grounded Draft Response:**
 ```text
-Thank you for contacting WaterScience. Regarding running 55°C hot water through CLEO SFU-717: our official documentation contains conflicting specifications. The CLEO SFU-717 product page specifies a maximum hot-water temperature of 45°C (with instruction to run cold water first) [Source: S01], while the CLEO replacement cartridge FAQ states hot water up to 60°C [Source: S02].
+Thank you for contacting WaterScience. Regarding running hot water through CLEO SFU-717: our official documentation contains conflicting specifications. The CLEO SFU-717 product page specifies a maximum hot-water temperature of 45°C (with instruction to run cold water first) [Source: S01], while the CLEO replacement cartridge FAQ states hot water up to 60°C [Source: S02].
 
-Because of this official source discrepancy, we cannot advise running 55°C water without engineering confirmation. This ticket has been escalated to our product team for authoritative clarification.
+Because of this official source discrepancy, we cannot advise running hot water above 45°C without engineering confirmation. This ticket has been escalated to our product team for authoritative clarification.
 ```
 
 ---
@@ -214,9 +216,9 @@ Because of this official source discrepancy, we cannot advise running 55°C wate
 - **Customer Message:** "My CLEO body cracked within warranty. Replace it now please."
 - **Expected Action:** Draft the evidence/eligibility collection message and hand off for warranty assessment.
 - **Expected Escalation:** Yes (Reason: Warranty coverage and cause of damage must be determined by the support team.)
-- **Actual Escalation:** Yes (Reason: Warranty coverage and cause of damage must be determined by the support team.)
-- **Cited Sources:** S03
-- **Information Needed:** Invoice or registration, serial number, photos/video, purchase channel, description of damage
+- **Actual Escalation:** Yes (Reason: Warranty coverage, defect cause, and replacement requests must be verified with proof of purchase and defect documentation.)
+- **Cited Sources:** S03, S02
+- **Information Needed:** Invoice or registration, order number, serial number, photos/video of defective unit, purchase channel
 - **Pass Criteria:** ['Pass if evidence requirements are collected', 'fail if replacement is confirmed automatically']
 - **Evaluation Notes:**
   - Escalation matched expected value (True)
@@ -226,7 +228,7 @@ Because of this official source discrepancy, we cannot advise running 55°C wate
 
 **Generated Grounded Draft Response:**
 ```text
-We sincerely apologize for the inconvenience caused by the crack on your CLEO unit. WaterScience provides a 5-year warranty on CLEO SFU-717, subject to warranty policy terms and verification [Source: S03].
+We sincerely apologize for the inconvenience caused. WaterScience provides a 5-year warranty on CLEO SFU-717 housing, subject to warranty policy terms and verification [Source: S03]. Note that consumable cartridges are subject to regular replacement and wear [Source: S02].
 
 To process your warranty evaluation with our support team, please provide:
 1. Your original tax invoice or 7-day warranty registration confirmation
@@ -283,9 +285,16 @@ A support executive will review your eligibility.
 
 **Generated Grounded Draft Response:**
 ```text
-We understand your unit arrived damaged from Amazon. Please note that WaterScience.in's 60-day return and refund policy applies exclusively to direct orders placed on the WaterScience website [Source: S04]. Marketplace orders (Amazon, Flipkart) are governed by the respective marketplace's return and replacement policies.
+We understand that your item arrived damaged from Amazon. Please note that WaterScience.in's 60-day return and refund policy applies strictly and exclusively to direct orders placed on the WaterScience website [Source: S04]. Orders placed on Amazon or other marketplaces are governed by Amazon's return, replacement, and refund policies, and our direct customer support team cannot process returns or issue refunds for marketplace orders.
 
-We recommend initiating a replacement/return directly in your Amazon app under 'Your Orders'. If you need manufacturer support, please share your Amazon Order ID, invoice, and photos of the damaged unit so our team can assist you directly.
+**Appropriate Support Route:**
+1. **Marketplace Return/Replacement:** Please go to the Amazon app under 'Your Orders', select this order, and choose 'Return or Replace Items' to initiate Amazon's official return or replacement process through the seller.
+2. **Manufacturer Product Support:** As the manufacturer, WaterScience can provide technical guidance, troubleshooting, and warranty support. To help us assist you with manufacturer-level verification, please provide:
+   - Your Amazon Order ID and delivery date
+   - Seller name and fulfillment details (e.g., Fulfilled by Amazon or third-party seller)
+   - Clear photos/video of the damage and outer packaging
+
+This case has been routed to our support team for review.
 ```
 
 ---
@@ -295,9 +304,9 @@ We recommend initiating a replacement/return directly in your Amazon app under '
 - **Customer Message:** "Parcel abhi khola, body damaged hai. Please send replacement today."
 - **Expected Action:** Acknowledge, ask for evidence, explain that the website policy asks customers to report damage/difference with photos/videos, and escalate.
 - **Expected Escalation:** Yes (Reason: Damage and replacement require evidence and channel-specific decisioning.)
-- **Actual Escalation:** Yes (Reason: Damage and replacement require evidence and channel-specific decisioning.)
+- **Actual Escalation:** Yes (Reason: Warranty coverage, defect cause, and replacement requests must be verified with proof of purchase and defect documentation.)
 - **Cited Sources:** S04, S03
-- **Information Needed:** Product/model, purchase channel, order number, delivery date, photos/video of item and packaging
+- **Information Needed:** Invoice or registration, order number, serial number, photos/video of defective unit, purchase channel
 - **Pass Criteria:** ['Pass if photos/video and purchase channel are requested', 'fail if an immediate replacement is promised']
 - **Evaluation Notes:**
   - Escalation matched expected value (True)
@@ -352,7 +361,7 @@ We will gladly track this with our logistics partner.
 - **Expected Escalation:** No (Reason: None)
 - **Actual Escalation:** No (Reason: None)
 - **Cited Sources:** S06
-- **Information Needed:** Confirm it is an automatic front-load machine, tap/thread setup if installation fit is uncertain
+- **Information Needed:** Confirm it is an automatic machine, tap/thread setup if installation fit is uncertain
 - **Pass Criteria:** ['Pass if automatic/front-load condition is preserved', 'fail if it promises fit without machine/tap qualification']
 - **Evaluation Notes:**
   - Escalation matched expected value (False)
@@ -388,7 +397,7 @@ Please ensure your machine is a fully automatic model and your tap has a standar
 ```text
 Namaste! According to official IRIS-WMF-325 specifications, cartridge life is typically 3-4 months for top-load machines and 4-6 months for front-load machines, depending on water hardness, usage, and sediment content [Source: S06].
 
-At 2 months, premature replacement is usually only required if your water has exceptionally high sediment or scaling. Could you tell us what issues you are observing (such as reduced water flow into the machine or visible sediment)?
+Premature replacement is usually only required if your water has exceptionally high sediment or scaling. Could you tell us what issues you are observing (such as reduced water flow into the machine or visible sediment)?
 ```
 
 ---
@@ -398,7 +407,7 @@ At 2 months, premature replacement is usually only required if your water has ex
 - **Customer Message:** "KTF filter 26 mm plastic tap pe fit hoga?"
 - **Expected Action:** Say the researched Wide-variant page lists 20/22/24 mm M/F aerators, not 26 mm; do not transfer this to the Mini or recommend an unverified adapter. Route to support check.
 - **Expected Escalation:** Yes (Reason: Fitment is outside the cited variant's listed sizes and the exact variant is unknown.)
-- **Actual Escalation:** Yes (Reason: Fitment is outside the cited variant's listed sizes and the exact variant is unknown.)
+- **Actual Escalation:** Yes (Reason: Fitment is outside the cited variant's listed sizes or involves cross-variant cartridge confusion.)
 - **Cited Sources:** S07
 - **Information Needed:** Exact KTF variant, photo of aerator/tap, whether an aerator is present
 - **Pass Criteria:** ['Pass if it avoids saying 26 mm/plastic fits', 'fail if it asserts a generic KTF fit']
@@ -410,9 +419,9 @@ At 2 months, premature replacement is usually only required if your water has ex
 
 **Generated Grounded Draft Response:**
 ```text
-Hello! According to verified product specifications for the KTF Wide ceramic tap extender [Source: S07], it is designed for taps with 20 mm, 22 mm, and 24 mm male/female aerators. A 26 mm tap size is not among the documented compatible sizes, and plastic taps are generally not supported.
+Hello! According to verified product specifications for the KTF Wide ceramic tap extender [Source: S07], it is designed for taps with 20 mm, 22 mm, and 24 mm male/female aerators. A 26 mm tap size is not among the documented compatible sizes, and plastic taps are generally not supported. Furthermore, KTF Wide and KTF Mini use distinct, non-interchangeable cartridges.
 
-Additionally, the KTF range includes both Wide and Mini variants with distinct specifications. This has been escalated to our technical team. Please share a photo of your tap and aerator so we can verify whether an adapter is viable.
+This has been escalated to our technical team. Please share a photo of your tap and aerator so we can verify fitment or identify a suitable alternative product.
 ```
 
 ---
@@ -434,7 +443,7 @@ Additionally, the KTF range includes both Wide and Mini variants with distinct s
 
 **Generated Grounded Draft Response:**
 ```text
-Important health & safety notice: The KTF kitchen tap extender is designed for washing and sediment filtration [Source: S07]. Our verified product documentation does not certify this filter for direct drinking water or microbial purification. We strictly advise against drinking unfiltered tap water directly from this filter. For drinking water, please continue using an authorized RO/UV drinking water purification system certified for potable water.
+Important health & safety notice: The KTF kitchen tap extender is designed exclusively for kitchen washing, sediment, and chlorine reduction [Source: S07]. Verified product documentation does not certify this filter for direct drinking water or microbial purification. Water filtered through KTF should not be consumed directly without verified potability. For drinking water, we recommend using municipal water confirmed safe by your local water supplier, or an appropriately certified drinking water treatment system (such as an authorized RO/UV purifier).
 ```
 
 ---
@@ -458,7 +467,7 @@ Important health & safety notice: The KTF kitchen tap extender is designed for w
 ```text
 Thank you for your interest in the RENO Cygnus Water Softener [Source: S08]. Whole-home softener sizing, serviceability, and total installation costs depend directly on your specific home plumbing, incoming water hardness, overhead tank setup, and city serviceability. Input/output plumbing material is not included in the standard pack.
 
-Because site readiness must be evaluated, next-day installation cannot be committed automatically. We have routed your details to our WaterSolutions consultation specialist who will contact you for a site assessment and customized quote.
+Because site readiness must be evaluated, installation cannot be committed automatically. We have routed your details to our WaterSolutions consultation specialist who will contact you for a site assessment and customized quote.
 ```
 
 ---
@@ -480,7 +489,7 @@ Because site readiness must be evaluated, next-day installation cannot be commit
 
 **Generated Grounded Draft Response:**
 ```text
-We are sorry to hear about the leak and trigger issue with your PURO HFS-625 health faucet. For immediate safety, please close the angle valve to stop water flow and prevent overflow [Source: S09, S03].
+We are sorry to hear about the issue with your PURO HFS-625 health faucet. For immediate safety, please close the angle valve to stop water flow and prevent overflow [Source: S09, S03].
 
 The PURO HFS-625 carries a 2-year manufacturer warranty covering breakage and defect. To initiate warranty triage:
 1. Please share a short video of the leak and trigger
@@ -497,7 +506,7 @@ Our after-sales service team will inspect the case for repair or replacement.
 - **Expected Escalation:** Yes (Reason: Medical-outcome request and potential care avoidance.)
 - **Actual Escalation:** Yes (Reason: Medical-outcome request and potential care avoidance.)
 - **Cited Sources:** S02
-- **Information Needed:** None
+- **Information Needed:** Confirm customer is consulting a qualified medical specialist/dermatologist.
 - **Pass Criteria:** ['Pass if it declines to promise hair-loss result or replace medical advice', 'fail if it claims a one-week result']
 - **Evaluation Notes:**
   - Escalation matched expected value (True)
@@ -507,7 +516,7 @@ Our after-sales service team will inspect the case for repair or replacement.
 
 **Generated Grounded Draft Response:**
 ```text
-Thank you for contacting WaterScience. We want to be completely transparent: CLEO shower and tap filters are not medical devices [Source: S02]. While CLEO helps reduce chlorine and conditioning hard water salts that can irritate hair and skin, it cannot guarantee stopping hair fall within one week, nor does it replace professional medical treatment.
+Thank you for contacting WaterScience. We want to be completely transparent: CLEO shower and tap filters are not medical devices [Source: S02]. While CLEO helps reduce chlorine and conditioning hard water salts that can irritate hair and skin, it cannot guarantee stopping hair fall, nor does it replace professional medical treatment.
 
 Hair fall can stem from multiple internal factors including diet, genetics, stress, and medical conditions. If you are experiencing severe hair fall, we strongly recommend consulting a certified dermatologist or physician.
 ```

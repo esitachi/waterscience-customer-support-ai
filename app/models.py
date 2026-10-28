@@ -51,6 +51,9 @@ class SupportCase(BaseModel):
     approval_status: ApprovalStatus = ApprovalStatus.PENDING_APPROVAL
     applied_guardrails: List[str] = []
     reviewer_comment: Optional[str] = None
+    execution_provider: str = "mock"
+    provider_error: Optional[str] = None
+    provider_error_category: Optional[str] = None
 
 class ApprovalActionRequest(BaseModel):
     action: str = Field(..., description="approve, reject, or edit")

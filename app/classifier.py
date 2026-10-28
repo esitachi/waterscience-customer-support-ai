@@ -31,134 +31,158 @@ class IssueClassifier:
             elif "iris" in hint_lower or "wmf" in hint_lower:
                 detected_product = "IRIS-WMF-325"
             elif "ktf" in hint_lower:
-                detected_product = "KTF variant unknown"
-            elif "reno" in hint_lower:
-                detected_product = "RENO Cygnus"
-            elif "puro" in hint_lower:
-                detected_product = "PURO HFS-625"
-
-        if not detected_product:
-            if "sfu-717" in t or "sfu 717" in t:
-                detected_product = "CLEO SFU-717"
-            elif "iris" in t or "wmf-325" in t or "wmf 325" in t or "front-load" in t or "front load" in t or "top load" in t or "washing machine" in t:
-                detected_product = "IRIS-WMF-325"
-            elif "ktf" in t or "kitchen tap" in t:
-                if "direct peena" in t or "peena" in t or "drink" in t:
+                if "wide" in hint_lower or "ceramic" in hint_lower:
                     detected_product = "KTF Kitchen Tap Extender"
                 else:
                     detected_product = "KTF variant unknown"
-            elif "reno" in t or "cygnus" in t or "softener" in t:
+            elif "reno" in hint_lower or "cygnus" in hint_lower:
+                detected_product = "RENO Cygnus"
+            elif "puro" in hint_lower or "hfs" in hint_lower:
+                detected_product = "PURO HFS-625"
+            elif "cartridge" in hint_lower:
+                detected_product = "CLEO replacement cartridge"
+
+        if not detected_product:
+            if "sfu-717" in t or "sfu 717" in t or "sfu717" in t:
+                detected_product = "CLEO SFU-717"
+            elif "iris" in t or "wmf-325" in t or "wmf 325" in t or "washing machine" in t or "front load" in t or "top load" in t or "top loader" in t or "front-load" in t:
+                detected_product = "IRIS-WMF-325"
+            elif ("ktf" in t or "kitchen tap extender" in t) and ("cleo" not in t and "sfu" not in t):
+                if any(w in t for w in ["direct peena", "peena", "drink", "milk", "baby", "infant", "formula", "potable", "consume"]):
+                    detected_product = "KTF Kitchen Tap Extender"
+                else:
+                    detected_product = "KTF variant unknown"
+            elif "reno" in t or "cygnus" in t or "whole home" in t or "softener" in t:
                 detected_product = "RENO Cygnus"
             elif "puro" in t or "health faucet" in t or "hfs-625" in t:
                 detected_product = "PURO HFS-625"
             elif "cleo" in t:
-                if "cartridge" in t or "borewell water" in t or "metro" in t:
+                if "cartridge" in t or "borewell" in t or "metro" in t or "municipal" in t:
                     detected_product = "CLEO replacement cartridge"
                 else:
                     detected_product = "CLEO SFU-717"
-            elif "model yaad nahi" in t or ("replacement" in t and "filter" in t and "photo" in t):
+            elif any(w in t for w in ["model yaad nahi", "send me two new cartridges", "cartridge for my filter at home", "replacement cartridge"]):
                 detected_product = "unknown WaterScience filter"
-            elif "parcel" in t or "order" in t:
+            elif any(w in t for w in ["parcel", "order", "package", "where is my", "tracking"]):
                 detected_product = "unknown WaterScience product"
 
-        # 2. Issue Category Classification
+        # 2. Issue Category Classification (Safety-First Ordering)
         category = "general_inquiry"
         source_ids = []
 
-        # Temperature limit conflict
-        if ("hot water" in t or "55 degree" in t or "temperature" in t or "degree hot water" in t) and ("sfu" in t or "cleo" in t):
+        # Temperature limit conflict (Safety critical)
+        if any(w in t for w in ["hot water", "degree", "celsius", "temperature", "geyser", "solar water", "garam paani", "75 degree", "55 degree"]):
             category = "temperature_limit_conflict"
+            detected_product = detected_product or "CLEO SFU-717"
             source_ids = ["S01", "S02"]
 
-        # Medical expectation
-        elif any(w in t for w in ["hair fall", "hairfall", "hair loss", "doctor", "skin", "dandruff"]):
+        # Potable water safety (Health / Ingestion critical)
+        elif any(w in t for w in ["direct peena", "peena", "peene", "safe to drink", "drink", "drinking", "potable", "baby milk", "infant", "pure for drinking", "viruses"]):
+            category = "potable_water_safety"
+            detected_product = detected_product or (
+                "KTF Kitchen Tap Extender" if "ktf" in t or "kitchen" in t else (detected_product or "CLEO SFU-717")
+            )
+            source_ids = ["S07"] if "ktf" in t or "kitchen" in t else ["S01", "S02"]
+
+        # Medical expectation (Health critical) - use word boundary for short words like skin/cure
+        elif any(w in t for w in ["hair fall", "hairfall", "hair loss", "doctor", "dandruff", "alopecia", "minoxidil"]) or re.search(r'\b(skin|cure)\b', t):
             category = "medical_expectation"
+            detected_product = detected_product or "CLEO SFU-717"
             source_ids = ["S02"]
 
-        # Potable water safety
-        elif any(w in t for w in ["direct peena", "peena", "peene", "safe to drink", "drink", "potable"]):
-            category = "potable_water_safety"
-            source_ids = ["S07"]
+        # Product fault / faucet trigger fault (check before generic filter leak)
+        elif "puro" in t or ("health faucet" in t and any(w in t for w in ["leak", "trigger", "fault"])) or "trigger work nahi" in t:
+            category = "product_fault"
+            detected_product = "PURO HFS-625"
+            source_ids = ["S09", "S03"]
 
-        # Leak after maintenance
-        elif "leak" in t and ("cartridge change" in t or "beech se paani" in t or "filter ke beech" in t):
+        # Leak after maintenance / plumbing & electrical hazard (Safety critical)
+        elif any(w in t for w in ["leak", "leaking", "spraying", "drip", "seeping", "burst", "paani leak", "beech se paani", "leakage"]):
             category = "leak_after_maintenance"
             source_ids = ["S02", "M01", "S03"]
 
-        # Product fault / faucet leak
-        elif "puro" in t or ("health faucet" in t and "leak" in t) or "trigger work nahi" in t:
-            category = "product_fault"
-            source_ids = ["S09", "S03"]
-
-        # Warranty claim (body cracked)
-        elif ("body cracked" in t or "cracked" in t) and ("warranty" in t or "replace it" in t):
-            category = "warranty_claim"
-            source_ids = ["S03"]
-
         # Damaged on arrival
-        elif ("parcel" in t or "package" in t) and ("damaged" in t or "tuta" in t or "broken" in t):
+        elif any(w in t for w in ["damaged", "tuta", "broken", "smashed", "broke box"]) and any(w in t for w in ["parcel", "package", "delivered", "box"]):
             category = "damaged_on_arrival"
             source_ids = ["S04", "S03"]
 
-        # Return requests: Marketplace vs Website
-        elif "refund" in t or "wapas" in t or "not suitable" in t or "return" in t:
-            if "amazon" in t or explicit_channel == PurchaseChannel.AMAZON.value:
+        # Warranty claim (including replacement requests and social engineering override attempts)
+        elif any(w in t for w in ["warranty", "guarantee", "shell cracked", "body cracked", "cracked", "replace it under warranty", "replacement unit", "send a replacement", "replacement without"]):
+            category = "warranty_claim"
+            source_ids = ["S03"]
+            if detected_product == "CLEO SFU-717" or "cartridge" in t:
+                source_ids.append("S02")
+
+        # Return & Refund requests: Marketplace vs Website
+        elif any(w in t for w in ["refund", "wapas", "not suitable", "return", "money back"]):
+            is_marketplace = (
+                explicit_channel in [PurchaseChannel.AMAZON.value, PurchaseChannel.FLIPKART.value, PurchaseChannel.QUICK_COMMERCE.value, PurchaseChannel.RETAIL.value]
+                or any(w in t for w in ["amazon", "flipkart", "blinkit", "zepto", "retail", "shop", "sanitary shop", "offline"])
+            )
+            if is_marketplace:
                 category = "marketplace_return_request"
                 source_ids = ["S04"]
             else:
                 category = "website_return_request"
                 source_ids = ["S04", "S01"]
 
-        # Delivery tracking
-        elif ("order" in t or "parcel" in t) and ("stuck" in t or "kab aayega" in t or "tracking" in t or "dispatch" in t or "delivery" in t):
+        # Delivery tracking & Shipping Inquiries (including domestic policy and international inquiries)
+        elif any(w in t for w in ["tracking", "trackin", "stuck", "kab aayega", "dispatch", "delivering", "where is my", "when will it arrive", "ship to", "shipping to", "international", "dubai"]):
             category = "delivery_tracking"
+            detected_product = detected_product or "unknown WaterScience product"
             source_ids = ["S05"]
 
-        # Washing machine compatibility & life
-        elif detected_product == "IRIS-WMF-325" or "iris" in t:
-            if "cartridge" in t and ("months" in t or "replace" in t or "life" in t):
-                category = "cartridge_life"
-                source_ids = ["S06"]
-            else:
-                category = "washing_machine_compatibility"
-                source_ids = ["S06"]
+        # Low flow troubleshooting (prioritize over routine cartridge queries when operational flow is impaired)
+        elif any(w in t for w in ["flow", "pressure", "trickle", "slow", "kam", "weak", "choke"]):
+            category = "low_flow"
+            detected_product = detected_product or "CLEO SFU-717"
+            source_ids = ["S02"]
 
-        # Kitchen filter compatibility
-        elif detected_product in ["KTF variant unknown", "KTF Kitchen Tap Extender"] or "ktf" in t:
-            category = "kitchen_filter_compatibility"
-            source_ids = ["S07"]
+        # Cartridge Life / Duration (appliance or general - requires lifecycle/duration query)
+        elif ("cartridge" in t or "cylinder" in t) and any(w in t for w in ["months", "life", "expire", "longevity", "how long", "lifespan", "duration"]):
+            category = "cartridge_life"
+            detected_product = detected_product or "IRIS-WMF-325"
+            source_ids = ["S06"]
 
-        # Whole home consultation
-        elif detected_product == "RENO Cygnus" or "reno" in t or "softener" in t:
-            category = "whole_home_consultation"
-            source_ids = ["S08"]
-
-        # Unknown product identification (SYN-020)
-        elif "model yaad nahi" in t or ("replacement" in t and "photo" in t and (not detected_product or "unknown" in detected_product)):
-            category = "product_identification"
-            detected_product = "unknown WaterScience filter"
-            source_ids = ["S02", "S10"]
-
-        # Cartridge selection
-        elif ("metro" in t or "borewell" in t or "cartridge loon" in t) and "cartridge" in t:
+        # Cartridge Selection & Media Inquiries (Municipal vs Borewell, KDF/composition)
+        elif any(w in t for w in ["borewell", "metro", "municipal", "tanker", "cauvery", "chlorine", "cartridge loon", "which cartridge", "kdf", "zinc and copper", "chemical percentage", "proprietary chemical"]):
             category = "cartridge_selection"
             detected_product = "CLEO replacement cartridge"
             source_ids = ["S01", "S02"]
 
+        # Whole home consultation (RENO Cygnus - check before general TDS if whole home/softener is mentioned)
+        elif detected_product == "RENO Cygnus" or any(w in t for w in ["reno", "cygnus", "whole home", "softener", "plant", "effluent"]):
+            category = "whole_home_consultation"
+            detected_product = "RENO Cygnus"
+            source_ids = ["S08"]
+
         # TDS expectation
-        elif "tds" in t and ("same" in t or "reduce" in t or "fake" in t or "meter" in t):
+        elif "tds" in t and any(w in t for w in ["same", "reduce", "fake", "meter", "ppm", "600", "drop", "nakli"]):
             category = "tds_expectation"
-            detected_product = "CLEO SFU-717"
+            detected_product = detected_product or "CLEO SFU-717"
             source_ids = ["S01", "S02"]
 
-        # Low flow
-        elif "flow" in t and ("slow" in t or "kam" in t or "drop" in t):
-            category = "low_flow"
-            detected_product = "CLEO SFU-717"
-            source_ids = ["S02"]
+        # Unknown product identification (SYN-020 & general)
+        elif (detected_product is None or detected_product in ["unknown WaterScience filter", "unknown WaterScience product"]) and (
+            any(w in t for w in ["cartridge", "replacement", "model", "photo", "send me", "which filter"])
+        ):
+            category = "product_identification"
+            detected_product = "unknown WaterScience filter"
+            source_ids = ["S02", "S10"]
 
-        # Compatibility (CLEO)
-        elif "fit" in t or "lag jayega" in t or "plastic" in t or "tap" in t:
+        # Kitchen filter compatibility
+        elif (detected_product in ["KTF variant unknown", "KTF Kitchen Tap Extender"] or "ktf" in t or "kitchen tap extender" in t) and (detected_product != "CLEO SFU-717" and "sfu" not in t and "cleo" not in t):
+            category = "kitchen_filter_compatibility"
+            source_ids = ["S07"]
+
+        # Washing machine compatibility
+        elif detected_product == "IRIS-WMF-325" or any(w in t for w in ["washing machine", "top load", "front load", "laundromat", "washer"]):
+            category = "washing_machine_compatibility"
+            detected_product = detected_product or "IRIS-WMF-325"
+            source_ids = ["S06"]
+
+        # General Compatibility & DIY Installation (including plumber requests)
+        elif any(w in t for w in ["fit", "fitting", "lag jayega", "plastic", "tap", "metal", "steel", "thread", "chudi", "aerator", "plumber", "installation", "install"]):
             category = "compatibility"
             detected_product = detected_product or "CLEO SFU-717"
             source_ids = ["S01"]

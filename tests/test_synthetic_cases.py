@@ -6,7 +6,8 @@ from app.models import CustomerQueryRequest, ApprovalActionRequest, ApprovalStat
 from app.engine import get_support_engine
 
 @pytest.fixture
-def engine():
+def engine(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "mock")
     return get_support_engine()
 
 @pytest.fixture
@@ -80,9 +81,19 @@ def test_syn_004_tds_expectation(engine):
     )
     case = engine.process_query(req)
     assert not case.human_escalation_required
-    assert "tds" in case.draft_response.lower()
-    assert "not" in case.draft_response.lower() or "nahi" in case.draft_response.lower()
-    assert "safe to drink" not in case.draft_response.lower()
+    draft_lower = case.draft_response.lower()
+    assert "tds" in draft_lower
+    assert "not" in draft_lower or "nahi" in draft_lower
+    assert "safe to drink" not in draft_lower
+    # F-01 Regression: No unsupported authenticity claims without proof
+    assert "bilkul authentic" not in draft_lower
+    assert "guaranteed authentic" not in draft_lower
+    assert "is authentic" not in draft_lower
+    assert "counterfeit-free" not in draft_lower
+    # Must explain that unchanged TDS does not prove defect or counterfeit
+    assert "defect" in draft_lower or "nakli" in draft_lower or "fake" in draft_lower
+    # Must request purchase channel/order/invoice for authenticity verification
+    assert "invoice" in draft_lower or "order" in draft_lower or "channel" in draft_lower
 
 def test_syn_005_low_flow_guidance(engine):
     req = CustomerQueryRequest(
@@ -233,6 +244,7 @@ def test_syn_018_puro_health_faucet_fault(engine):
     )
     case = engine.process_query(req)
     assert case.human_escalation_required
+    assert case.issue_category == "product_fault"
     assert "shut off" in case.draft_response.lower() or "valve" in case.draft_response.lower()
 
 def test_syn_019_medical_claims_rejection(engine):
@@ -283,3 +295,18 @@ def test_human_approval_workflow(engine):
     ))
     assert updated2.approval_status == ApprovalStatus.EDITED
     assert updated2.draft_response == "Edited custom response for customer."
+
+def test_groq_live_draft(monkeypatch):
+    if not settings.GROQ_API_KEY:
+        pytest.skip("GROQ_API_KEY not configured")
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "groq")
+    live_engine = get_support_engine()
+    req = CustomerQueryRequest(
+        case_id="TEST-GROQ-01",
+        message="Will CLEO SFU-717 fit my 24 mm metal tap?",
+        product_hint="CLEO SFU-717"
+    )
+    case = live_engine.process_query(req)
+    assert len(case.draft_response) > 20
+    assert len(case.cited_sources) > 0
+    assert case.approval_status == ApprovalStatus.PENDING_APPROVAL

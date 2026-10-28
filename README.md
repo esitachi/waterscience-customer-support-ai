@@ -60,11 +60,21 @@ waterscience-customer-support-ai/
 │   └── assignment.pdf         # Original assignment specification
 ├── tests/
 │   ├── __init__.py
-│   └── test_synthetic_cases.py # 20 automated tests verifying expected behaviors
-├── .env.example               # Template environment configuration
+│   ├── test_synthetic_cases.py      # 20 automated tests verifying expected behaviors
+│   ├── test_generalization_cases.py # 40 generalization test cases
+│   └── test_evaluator.py            # Strict semantic evaluator unit tests
+├── Dockerfile                 # Container image specification
+├── compose.yaml               # Docker compose configuration
+├── .dockerignore              # Container build exclusions
+├── .env.example               # Template environment configuration (no secrets)
 ├── requirements.txt           # Python dependencies
 ├── generate_test_report.py    # Generates markdown benchmark report
+├── evaluate_generalization.py # 40-case generalization evaluation runner
+├── package_submission.py      # Automated packaging and security audit script
 ├── test_results_report.md     # Full case-by-case evaluation report (20/20 PASS)
+├── live_failure_analysis.md   # Live failure analysis and defect resolution
+├── corrective_fixes_report.md # Release verification and metric reconciliation
+├── final_release_audit.md     # Release audit findings and resolutions
 ├── architecture.md            # Deep dive on architecture, costs, and scale
 ├── one_page_summary.md        # One-page executive assignment summary
 ├── demo_script.md             # 3-5 minute live demonstration walkthrough
@@ -79,46 +89,114 @@ waterscience-customer-support-ai/
 - Python 3.10+ (tested on Python 3.14 on Windows)
 - Git
 
-### 2. Clone and Install Dependencies
-```bash
-git clone <repository_url>
-cd waterscience-customer-support-ai
+### 2. Execution Options
 
-# Create and activate virtual environment (optional but recommended)
-python -m venv venv
-venv\Scripts\activate       # On Windows
-# source venv/bin/activate  # On macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 3. Environment Configuration
-The prototype includes a zero-cost, deterministic **Mock Mode** by default. To run in Mock Mode, no `.env` file or API keys are required!
-
-To test with a live LLM (optional):
-```bash
-cp .env.example .env
-```
-Edit `.env`:
-```env
-LLM_PROVIDER=openai
-OPENAI_API_KEY=your_openai_api_key_here
-LLM_MODEL=gpt-4o-mini
-```
+The prototype supports two execution options. In either mode, **Mock Mode** operates out-of-the-box with zero configuration and requires **no API keys or credentials**.
 
 ---
 
-## Running the Application
+#### Option A: Run Locally (Python Virtual Environment)
 
-### Start the FastAPI Server
-```bash
-python -m uvicorn app.api:app --host 127.0.0.1 --port 8000 --reload
-```
-Open your browser at:
-```text
-http://127.0.0.1:8000
-```
+1. **Create and activate a virtual environment:**
+   ```bash
+   python -m venv venv
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Start the application:**
+   ```bash
+   python -m uvicorn app.api:app --host 127.0.0.1 --port 8000 --reload
+   ```
+
+4. **Access the application:**
+   Open your browser at:
+   ```text
+   http://127.0.0.1:8000
+   ```
+
+5. **Stop the application:**
+   Press `Ctrl + C` in the terminal to gracefully stop the uvicorn server.
+
+---
+
+#### Option B: Run with Docker Compose
+
+A production-appropriate, minimal container configuration is provided via `Dockerfile` and `compose.yaml`.
+
+1. **Build and start the container:**
+   ```bash
+   docker compose up --build -d
+   ```
+
+2. **Access the application:**
+   Open your browser at:
+   ```text
+   http://localhost:8000
+   ```
+   Check container health at:
+   ```text
+   http://localhost:8000/health
+   ```
+
+3. **Stop the container:**
+   ```bash
+   docker compose down
+   ```
+
+4. **Configuring Optional Live LLM in Docker (Securely):**
+   To run with a live LLM provider (e.g. Groq or OpenAI) rather than the default mock mode:
+   - Pass the environment variable directly without editing or committing secrets:
+     ```bash
+     GROQ_API_KEY="your-key-here" LLM_PROVIDER="groq" docker compose up -d
+     ```
+   - Or define the variable in a local `.env` file (which is automatically ignored by `.gitignore` and `.dockerignore`).
+   - If no API key is provided, the container automatically operates in deterministic **Mock Mode** with zero external dependencies.
+
+---
+
+#### Option C: Deploy to Render (Cloud Web Service)
+
+The application is containerized with dynamic port support and health checking tailored for cloud PaaS environments like **Render**.
+
+1. **Create Web Service on Render:**
+   - Link your GitHub repository or connect via Docker.
+   - Choose **Docker** as the Runtime environment.
+
+2. **Configure Environment Variables:**
+   - `ENVIRONMENT`: `production`
+   - `LLM_PROVIDER`: `mock` *(Recommended default for public demonstration to avoid API quota exhaustion by unauthorized web traffic)*
+   - `GROQ_API_KEY`: *(Leave blank for mock mode, or provide if hosting a private live AI demonstration)*
+
+3. **Configure Network & Health Check:**
+   - **Port:** Render automatically injects the `$PORT` environment variable (typically `10000`). The container automatically listens on `${PORT:-8000}`.
+   - **Health Check Path:** `/health`
+   - **Docker Build Context:** `.`
+   - **Dockerfile Path:** `./Dockerfile`
+
+4. **Verify Deployment:**
+   - Once deployed, visit your Render URL (e.g. `https://waterscience-support.onrender.com/health`).
+   - Confirm status reports `"status": "healthy"` and `"provider_status": "deterministic_mock_mode"`.
+   - The interactive Agent Review Console is served at the root `/`.
+
+---
+
+### 3. Environment Configuration
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `LLM_PROVIDER` | `mock` | `mock` (deterministic zero-cost) or `groq` / `openai` (live LLM). |
+| `GROQ_API_KEY` | None | API key for Groq live LLM provider (optional). |
+| `OPENAI_API_KEY` | None | API key for OpenAI live LLM provider (optional). |
+| `PORT` | `8000` | Port for the web server (configurable). |
+| `ENVIRONMENT` | `development` | `development` or `production`. |
 
 ---
 
@@ -202,6 +280,9 @@ See the complete [Test Results Report](test_results_report.md) for full transcri
 - [One-Page Submission Summary](one_page_summary.md)
 - [Architecture & Design Decisions](architecture.md)
 - [Demo Script & Walkthrough](demo_script.md)
-- [Synthetic Benchmark Test Report](test_results_report.md)
+- [Synthetic Benchmark Test Report (20/20)](test_results_report.md)
+- [Live Failure Analysis & Resolution](live_failure_analysis.md)
+- [Corrective Fixes & Verification Report](corrective_fixes_report.md)
+- [Final Release Audit](final_release_audit.md)
 - [Research Summary](research/research_summary.md)
 - [Source Gaps Log](research/source_gaps.md)

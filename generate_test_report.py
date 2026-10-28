@@ -1,16 +1,29 @@
-import urllib.request
+import sys
 import json
+import urllib.request
 from datetime import datetime, timezone
 
+def fetch_benchmark_results():
+    # First attempt to query a running server on 127.0.0.1:8000
+    try:
+        req = urllib.request.Request(
+            'http://127.0.0.1:8000/api/run-synthetic-tests',
+            data=b'{}',
+            headers={'Content-Type': 'application/json'},
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=3) as res:
+            return json.loads(res.read().decode())
+    except Exception:
+        # Fall back to in-process FastAPI TestClient for standalone, offline, and CI environments
+        from fastapi.testclient import TestClient
+        from app.api import app
+        client = TestClient(app)
+        res = client.post('/api/run-synthetic-tests', json={})
+        return res.json()
+
 def generate():
-    req = urllib.request.Request(
-        'http://127.0.0.1:8000/api/run-synthetic-tests',
-        data=b'{}',
-        headers={'Content-Type': 'application/json'},
-        method='POST'
-    )
-    res = urllib.request.urlopen(req)
-    data = json.loads(res.read().decode())
+    data = fetch_benchmark_results()
 
     with open('research/synthetic_support_cases.json', 'r', encoding='utf-8') as f:
         orig = json.load(f)['cases']
@@ -22,7 +35,8 @@ def generate():
     lines.append(f'**Total Test Cases:** {len(data)}\n\n')
     passed = sum(1 for d in data if d['pass_status'])
     failed = sum(1 for d in data if not d['pass_status'])
-    lines.append(f'**Passed:** {passed} / {len(data)} (100%)\n\n')
+    pct = round(passed / len(data) * 100, 1) if data else 0.0
+    lines.append(f'**Passed:** {passed} / {len(data)} ({pct}%)\n\n')
     lines.append(f'**Failed:** {failed} / {len(data)}\n\n')
     lines.append('**Governing Specification:** WaterScience AI Builder Take-Home Assignment (Problem 2: Customer Service Overload)\n\n')
     lines.append('## Summary Table\n\n')
@@ -63,7 +77,23 @@ def generate():
     with open('test_results_report.md', 'w', encoding='utf-8') as f:
         f.writelines(lines)
 
-    print('Successfully generated test_results_report.md')
+    print(f'Successfully generated test_results_report.md ({passed}/{len(data)} passed)')
+
+    # Enforce CI / automated test failure on any benchmark failure or category mismatch
+    category_mismatches = [
+        d['case_id'] for d in data 
+        if d['actual_issue_category'] != d['expected_issue_category']
+    ]
+
+    if failed > 0:
+        print(f'BENCHMARK FAILED: {failed} cases failed validation criteria.', file=sys.stderr)
+        sys.exit(1)
+    elif category_mismatches:
+        print(f'BENCHMARK FAILED: Category mismatches detected in {category_mismatches}.', file=sys.stderr)
+        sys.exit(1)
+    else:
+        print('BENCHMARK PASSED: All 20 synthetic cases passed with zero category mismatches.')
+        sys.exit(0)
 
 if __name__ == '__main__':
     generate()

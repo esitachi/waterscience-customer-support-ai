@@ -54,6 +54,7 @@ class SupportEngine:
             review_status = ReviewStatus.ESCALATED_TO_HUMAN
 
         # Step 5: Generate grounded draft response
+        meta: Dict[str, Any] = {}
         draft = ResponseGenerator.generate_draft(
             customer_message=query.message,
             issue_category=issue_category,
@@ -62,7 +63,8 @@ class SupportEngine:
             information_needed=needed_info,
             cited_sources=cited_sources,
             human_escalation_required=escalate,
-            reason_for_escalation=escalation_reason
+            reason_for_escalation=escalation_reason,
+            execution_metadata=meta
         )
 
         # Step 6: Formulate SupportCase with mandatory human approval pending
@@ -82,7 +84,10 @@ class SupportEngine:
             review_status=review_status,
             approval_status=ApprovalStatus.PENDING_APPROVAL,
             applied_guardrails=guardrails,
-            reviewer_comment=None
+            reviewer_comment=None,
+            execution_provider=meta.get("execution_provider", "mock"),
+            provider_error=meta.get("provider_error"),
+            provider_error_category=meta.get("provider_error_category")
         )
 
         self.cases[case_id] = case

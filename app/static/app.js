@@ -27,7 +27,27 @@ async function fetchHealth() {
             const data = await res.json();
             const envBadge = document.getElementById('env-badge');
             if (envBadge) {
-                envBadge.textContent = `Provider: ${data.llm_provider.toUpperCase()}`;
+                const prov = data.configured_llm_provider || data.llm_provider || 'mock';
+                if (prov === 'groq') {
+                    if (data.live_credentials_present) {
+                        envBadge.textContent = 'Provider: Groq (Live AI)';
+                        envBadge.className = 'badge badge-success';
+                    } else {
+                        envBadge.textContent = 'Provider: Groq (No Key → Fallback Mock)';
+                        envBadge.className = 'badge badge-warning';
+                    }
+                } else if (prov === 'openai') {
+                    if (data.live_credentials_present) {
+                        envBadge.textContent = 'Provider: OpenAI (Live AI)';
+                        envBadge.className = 'badge badge-success';
+                    } else {
+                        envBadge.textContent = 'Provider: OpenAI (No Key → Fallback Mock)';
+                        envBadge.className = 'badge badge-warning';
+                    }
+                } else {
+                    envBadge.textContent = 'Provider: Mock Mode (Deterministic)';
+                    envBadge.className = 'badge badge-outline';
+                }
             }
             const kbBadge = document.getElementById('kb-badge');
             if (kbBadge) {
@@ -170,6 +190,18 @@ function renderReviewCard(c) {
     document.getElementById('meta-channel').textContent = (c.purchase_channel || 'Unknown').replace('_', ' ').toUpperCase();
     document.getElementById('meta-escalation').textContent = c.human_escalation_required ? 'REQUIRED' : 'NO';
 
+    const metaProvider = document.getElementById('meta-provider');
+    if (metaProvider) {
+        if (c.execution_provider === 'live_llm') {
+            metaProvider.innerHTML = '<span style="color: #059669; font-weight: 600;">⚡ Live LLM (Groq)</span>';
+        } else if (c.execution_provider === 'fallback_mock') {
+            const reason = c.provider_error_category ? ` (${c.provider_error_category})` : '';
+            metaProvider.innerHTML = `<span style="color: #d97706; font-weight: 600;">⚠️ Fallback Mock${reason}</span>`;
+        } else {
+            metaProvider.innerHTML = '<span style="color: #475569; font-weight: 500;">🔒 Deterministic Mock</span>';
+        }
+    }
+
     // Missing Info Block
     const missingBlock = document.getElementById('missing-info-block');
     const missingList = document.getElementById('missing-info-list');
@@ -228,7 +260,125 @@ function renderReviewCard(c) {
     draftTextarea.oninput = updateCharCount;
 
     // Reset reviewer comment
-    document.getElementById('reviewer-comment').value = c.reviewer_comment || '';
+    const commentInput = document.getElementById('reviewer-comment');
+    commentInput.value = c.reviewer_comment || '';
+
+    // Reset or apply approval state
+    const actionButtons = document.getElementById('action-buttons');
+    const finalizedCard = document.getElementById('finalized-card');
+    const btnApprove = document.getElementById('btn-approve');
+    const btnEdit = document.getElementById('btn-edit');
+    const btnReject = document.getElementById('btn-reject');
+
+    if (c.approval_status === 'approved') {
+        lockCaseUI('approved', c.reviewer_comment);
+    } else if (c.approval_status === 'rejected') {
+        lockCaseUI('rejected', c.reviewer_comment);
+    } else {
+        // Unlock for fresh/pending review
+        draftTextarea.readOnly = false;
+        draftTextarea.classList.remove('locked-input');
+        commentInput.disabled = false;
+        if (actionButtons) actionButtons.style.display = 'flex';
+        if (finalizedCard) finalizedCard.style.display = 'none';
+        if (btnApprove) {
+            btnApprove.disabled = false;
+            btnApprove.innerHTML = '✓ Approve Reply';
+        }
+        if (btnEdit) btnEdit.disabled = false;
+        if (btnReject) btnReject.disabled = false;
+        if (c.approval_status === 'edited') {
+            pill.textContent = 'Custom Edited';
+            pill.className = 'step-badge badge-outline';
+            if (btnApprove) btnApprove.innerHTML = '✓ Approve & Dispatch Reply';
+        }
+    }
+}
+
+function lockCaseUI(state, comment) {
+    const pill = document.getElementById('approval-pill');
+    const draftTextarea = document.getElementById('draft-textarea');
+    const commentInput = document.getElementById('reviewer-comment');
+    const actionButtons = document.getElementById('action-buttons');
+    const finalizedCard = document.getElementById('finalized-card');
+
+    draftTextarea.readOnly = true;
+    draftTextarea.classList.add('locked-input');
+    commentInput.disabled = true;
+    if (actionButtons) actionButtons.style.display = 'none';
+
+    if (state === 'approved') {
+        pill.textContent = 'APPROVED & DISPATCHED';
+        pill.className = 'step-badge badge-success';
+        if (finalizedCard) {
+            finalizedCard.className = 'finalized-card approved';
+            finalizedCard.innerHTML = `
+                <div class="finalized-header">
+                    <div class="finalized-icon-badge">✓</div>
+                    <div class="finalized-text">
+                        <h4 class="finalized-title">Reply Approved & Dispatched</h4>
+                        <p class="finalized-subtitle">Signed off by agent. Response has been queued for customer dispatch via WhatsApp/Email.</p>
+                    </div>
+                </div>
+                <div class="finalized-meta">
+                    <span class="audit-note-text"><strong>Audit Note:</strong> ${comment || 'Approved without modification'}</span>
+                    <button class="btn btn-sm btn-outline-brand" onclick="resetForNewQuery()">Process Next Query →</button>
+                </div>
+            `;
+            finalizedCard.style.display = 'block';
+        }
+    } else if (state === 'rejected') {
+        pill.textContent = 'REJECTED';
+        pill.className = 'step-badge badge-danger';
+        if (finalizedCard) {
+            finalizedCard.className = 'finalized-card rejected';
+            finalizedCard.innerHTML = `
+                <div class="finalized-header">
+                    <div class="finalized-icon-badge">✕</div>
+                    <div class="finalized-text">
+                        <h4 class="finalized-title">Draft Rejected & Discarded</h4>
+                        <p class="finalized-subtitle">AI draft dismissed. Case forwarded to Tier-2 senior human queue for manual composition.</p>
+                    </div>
+                </div>
+                <div class="finalized-meta">
+                    <span class="audit-note-text"><strong>Reason:</strong> ${comment || 'Rejected without specific note'}</span>
+                    <button class="btn btn-sm btn-outline-brand" onclick="resetForNewQuery()">Process Next Query →</button>
+                </div>
+            `;
+            finalizedCard.style.display = 'block';
+        }
+    }
+}
+
+function resetForNewQuery() {
+    document.getElementById('customer-message').value = '';
+    document.getElementById('preset-select').value = '';
+    document.getElementById('order-id').value = '';
+    document.getElementById('product-hint').value = '';
+    document.getElementById('empty-state').style.display = 'block';
+    document.getElementById('result-container').style.display = 'none';
+    currentCase = null;
+    showToast('Ready for new customer message.', 'info');
+    document.getElementById('customer-message').focus();
+}
+
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast-item toast-${type}`;
+    toast.innerHTML = `<span>${message}</span>`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3500);
 }
 
 function updateCharCount() {
@@ -243,13 +393,21 @@ async function updateApproval(action) {
     const editedText = document.getElementById('draft-textarea').value;
     const comment = document.getElementById('reviewer-comment').value.trim() || null;
 
+    const btnApprove = document.getElementById('btn-approve');
+    const btnEdit = document.getElementById('btn-edit');
+    const btnReject = document.getElementById('btn-reject');
+
+    if (btnApprove) btnApprove.disabled = true;
+    if (btnEdit) btnEdit.disabled = true;
+    if (btnReject) btnReject.disabled = true;
+
     try {
         const res = await fetch(`/api/cases/${currentCase.case_id}/approve`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: action,
-                edited_response: action === 'edit' ? editedText : null,
+                edited_response: (action === 'edit' || action === 'approve') ? editedText : null,
                 reviewer_comment: comment
             })
         });
@@ -259,22 +417,29 @@ async function updateApproval(action) {
         const updated = await res.json();
         currentCase = updated;
 
-        const pill = document.getElementById('approval-pill');
         if (action === 'approve') {
-            pill.textContent = 'APPROVED BY AGENT';
-            pill.className = 'step-badge badge-success';
-            alert('✓ Reply approved! In production, this would dispatch the message to WhatsApp/Email.');
+            lockCaseUI('approved', comment);
+            showToast('✓ Reply approved & dispatched to customer channel!');
+        } else if (action === 'reject') {
+            lockCaseUI('rejected', comment);
+            showToast('✕ Draft rejected. Escalated for manual agent drafting.', 'danger');
         } else if (action === 'edit') {
+            const pill = document.getElementById('approval-pill');
             pill.textContent = 'CUSTOM EDITED';
             pill.className = 'step-badge badge-outline';
-            alert('💾 Edits saved successfully.');
-        } else if (action === 'reject') {
-            pill.textContent = 'REJECTED';
-            pill.className = 'step-badge badge-danger';
-            alert('✕ Draft rejected. Escalated for manual agent drafting.');
+            if (btnApprove) {
+                btnApprove.disabled = false;
+                btnApprove.innerHTML = '✓ Approve & Dispatch Reply';
+            }
+            if (btnEdit) btnEdit.disabled = false;
+            if (btnReject) btnReject.disabled = false;
+            showToast('💾 Custom edits saved! Click "Approve & Dispatch" when ready.');
         }
     } catch (e) {
         alert(e.message);
+        if (btnApprove) btnApprove.disabled = false;
+        if (btnEdit) btnEdit.disabled = false;
+        if (btnReject) btnReject.disabled = false;
     }
 }
 

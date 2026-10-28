@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WaterScience AI Customer Support — Agent Review Console</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=3.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -142,6 +142,10 @@
                                 <span class="meta-label">Escalation Flag</span>
                                 <span class="meta-val" id="meta-escalation">-</span>
                             </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Generation Mode</span>
+                                <span class="meta-val" id="meta-provider">-</span>
+                            </div>
                         </div>
 
                         <!-- Missing Information Checklist -->
@@ -172,21 +176,23 @@
                         </div>
 
                         <!-- Reviewer Actions -->
-                        <div class="review-actions">
-                            <div class="form-group reviewer-comment-group">
+                        <div class="review-actions" id="review-actions-container">
+                            <div class="form-group reviewer-comment-group" id="comment-group">
                                 <input type="text" id="reviewer-comment" class="form-control" placeholder="Optional audit note or reason for modification...">
                             </div>
-                            <div class="action-buttons">
-                                <button class="btn btn-success" onclick="updateApproval('approve')">
+                            <div class="action-buttons" id="action-buttons">
+                                <button class="btn btn-success" id="btn-approve" onclick="updateApproval('approve')">
                                     ✓ Approve Reply
                                 </button>
-                                <button class="btn btn-secondary" onclick="updateApproval('edit')">
+                                <button class="btn btn-secondary" id="btn-edit" onclick="updateApproval('edit')">
                                     💾 Save Custom Edits
                                 </button>
-                                <button class="btn btn-danger" onclick="updateApproval('reject')">
+                                <button class="btn btn-danger" id="btn-reject" onclick="updateApproval('reject')">
                                     ✕ Reject Draft
                                 </button>
                             </div>
+                            <!-- Finalized State Container (Replaces buttons when approved/rejected) -->
+                            <div class="finalized-card" id="finalized-card" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -278,6 +284,9 @@
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <!-- Toast Notification for clean feedback -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js?v=3.0"></script>
 </body>
 </html>
