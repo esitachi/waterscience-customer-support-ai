@@ -16,7 +16,13 @@ from app.models import (
     IngestMessageRequest,
     IngestMessageResponse,
     ProcessingJobStatus,
-    TicketSummary
+    TicketSummary,
+    AddSourceURLRequest,
+    SourceSummary,
+    KnowledgeVersionSummary,
+    PublishVersionRequest,
+    RollbackVersionRequest,
+    SyncScheduleConfig
 )
 from app.engine import get_support_engine
 from app.knowledge import get_knowledge_base
@@ -26,9 +32,12 @@ from app.database import (
     MessageRecord,
     ConversationRecord,
     ProcessingJobRecord,
-    TicketRecord
+    TicketRecord,
+    KnowledgeSourceRecord,
+    KnowledgeVersionRecord
 )
 from app.queue_manager import get_queue_manager
+from app.crawler import KnowledgeSyncEngine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -511,3 +520,113 @@ def update_ticket_action(ticket_id: str, action: str, assigned_to: Optional[str]
             ticket.resolved_at = datetime.now(timezone.utc)
         db.commit()
         return {"status": "success", "ticket_id": ticket_id, "ticket_status": ticket.status}
+
+# -----------------------------------------------------------------------------
+# Phase 3: URL-Based Knowledge Management APIs
+# -----------------------------------------------------------------------------
+
+_sync_schedule_state = SyncScheduleConfig(frequency="manual")
+
+@app.get("/api/v2/knowledge/sources", response_model=List[SourceSummary])
+def list_knowledge_sources():
+    """Returns all registered official website sources with crawl status and hashes."""
+    with SessionLocal() as db:
+        sources = db.query(KnowledgeSourceRecord).order_by(KnowledgeSourceRecord.id.asc()).all()
+        return [
+            SourceSummary(
+                source_id=s.source_id,
+                title=s.title,
+                url=s.url,
+                source_type=s.source_type,
+                content_hash=s.content_hash,
+                status=s.status,
+                last_crawled_at=s.last_crawled_at.isoformat() if s.last_crawled_at else None,
+                last_error=s.last_error
+            )
+            for s in sources
+        ]
+
+@app.post("/api/v2/knowledge/sources")
+def add_knowledge_source(req: AddSourceURLRequest):
+    """Registers a new official website URL into the knowledge base."""
+    with SessionLocal() as db:
+        try:
+            res = KnowledgeSyncEngine.add_source_url(
+                db=db,
+                source_id=req.source_id,
+                title=req.title,
+                url=req.url,
+                source_type=req.source_type
+            )
+            return res
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/v2/knowledge/crawl")
+def trigger_knowledge_crawl():
+    """
+    Triggers website crawl across all registered official URLs.
+    Detects unchanged vs modified pages and proposes a draft knowledge version if changes found.
+    """
+    with SessionLocal() as db:
+        res = KnowledgeSyncEngine.sync_all_sources(db=db)
+        return res
+
+@app.get("/api/v2/knowledge/versions", response_model=List[KnowledgeVersionSummary])
+def list_knowledge_versions():
+    """Returns version history of the knowledge base (draft, published, archived)."""
+    with SessionLocal() as db:
+        versions = db.query(KnowledgeVersionRecord).order_by(KnowledgeVersionRecord.version_number.desc()).all()
+        return [
+            KnowledgeVersionSummary(
+                version_number=v.version_number,
+                status=v.status,
+                change_summary=v.change_summary,
+                diff_json=v.diff_json,
+                created_by=v.created_by,
+                created_at=v.created_at.isoformat() if v.created_at else "",
+                published_at=v.published_at.isoformat() if v.published_at else None
+            )
+            for v in versions
+        ]
+
+@app.post("/api/v2/knowledge/publish")
+def publish_knowledge_version(req: PublishVersionRequest):
+    """Publishes a validated draft knowledge version and invalidates cache."""
+    with SessionLocal() as db:
+        try:
+            res = KnowledgeSyncEngine.publish_version(
+                db=db,
+                version_number=req.version_number,
+                approved_by=req.approved_by,
+                notes=req.notes
+            )
+            return res
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+@app.post("/api/v2/knowledge/rollback")
+def rollback_knowledge_version(req: RollbackVersionRequest):
+    """Rolls back active production knowledge to a previous verified version."""
+    with SessionLocal() as db:
+        try:
+            res = KnowledgeSyncEngine.rollback_version(
+                db=db,
+                target_version_number=req.target_version_number,
+                reason=req.reason
+            )
+            return res
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+@app.get("/api/v2/knowledge/schedule", response_model=SyncScheduleConfig)
+def get_sync_schedule():
+    """Returns the current automated synchronization frequency."""
+    return _sync_schedule_state
+
+@app.post("/api/v2/knowledge/schedule", response_model=SyncScheduleConfig)
+def update_sync_schedule(config: SyncScheduleConfig):
+    """Updates the synchronization frequency (manual, daily, weekly)."""
+    global _sync_schedule_state
+    _sync_schedule_state.frequency = config.frequency
+    return _sync_schedule_state

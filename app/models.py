@@ -158,3 +158,42 @@ class TicketSummary(BaseModel):
     recommended_action: Optional[str] = None
     created_at: str
     resolved_at: Optional[str] = None
+
+class AddSourceURLRequest(BaseModel):
+    source_id: str = Field(..., description="Unique source code, e.g. S15")
+    title: str = Field(..., description="Human-readable title of product or policy")
+    url: str = Field(..., description="Official live URL on waterscience.in")
+    source_type: str = Field("official product page", description="Source classification type")
+
+class SourceSummary(BaseModel):
+    source_id: str
+    title: str
+    url: str
+    source_type: str
+    content_hash: Optional[str] = None
+    status: str = "valid"  # valid, modified, failed, pending
+    last_crawled_at: Optional[str] = None
+    last_error: Optional[str] = None
+
+class KnowledgeVersionSummary(BaseModel):
+    version_number: int
+    status: str = "draft"  # draft, published, archived
+    change_summary: Optional[str] = None
+    diff_json: Optional[str] = None
+    created_by: str = "manager"
+    created_at: str
+    published_at: Optional[str] = None
+
+class PublishVersionRequest(BaseModel):
+    version_number: int
+    approved_by: str = "support_manager"
+    notes: Optional[str] = None
+
+class RollbackVersionRequest(BaseModel):
+    target_version_number: int
+    reason: Optional[str] = None
+
+class SyncScheduleConfig(BaseModel):
+    frequency: str = "manual"  # manual, daily, weekly
+    last_run_at: Optional[str] = None
+    next_run_at: Optional[str] = None
