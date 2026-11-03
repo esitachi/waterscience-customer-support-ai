@@ -261,11 +261,39 @@
             <div class="card">
                 <div class="card-header">
                     <h2>Verified Knowledge Base & Source Evidence Registry</h2>
-                    <span class="step-badge">Research Register</span>
+                    <span class="step-badge" id="kb-stats-pill">Evidence Register</span>
                 </div>
-                <p class="section-desc">All facts and policy rules are strictly derived from official WaterScience product and policy pages accessed on 28 October 2026. Amazon India marketplace review and Q&A content was inaccessible and is intentionally excluded to prevent hallucination.</p>
-                <div class="kb-grid" id="kb-sources-grid">
-                    <!-- Populated dynamically via app.js -->
+                <p class="section-desc">All facts, cartridge compatibility mappings, and policy rules are strictly derived from official WaterScience product and policy pages. Amazon India marketplace review and Q&A content was inaccessible and is intentionally excluded to prevent hallucination.</p>
+                
+                <!-- Sub-navigation for KB View -->
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
+                    <button class="btn btn-outline active-subtab" id="subtab-sources-btn" onclick="switchKBSubTab('sources')">🔗 Verified Sources (<span id="count-sources">0</span>)</button>
+                    <button class="btn btn-outline" id="subtab-products-btn" onclick="switchKBSubTab('products')">📦 Products & Cartridges (<span id="count-products">0</span>)</button>
+                    <button class="btn btn-outline" id="subtab-rules-btn" onclick="switchKBSubTab('rules')">🛡️ Negative Rules & Guardrails</button>
+                </div>
+
+                <!-- Sources Grid -->
+                <div id="kb-subtab-sources">
+                    <h3 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 1rem;">Official Ground Truth Sources</h3>
+                    <div class="kb-grid" id="kb-sources-grid">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+
+                <!-- Products & Cartridges Section -->
+                <div id="kb-subtab-products" style="display: none;">
+                    <h3 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 1rem;">Verified Products & Cartridge Compatibility Matrix</h3>
+                    <div id="kb-products-grid" class="kb-grid">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+
+                <!-- Guardrails & Negative Rules Section -->
+                <div id="kb-subtab-rules" style="display: none;">
+                    <h3 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 1rem;">System Guardrails & Negative Compatibility Rules</h3>
+                    <div id="kb-rules-list" class="checklist">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
                 </div>
             </div>
         </section>

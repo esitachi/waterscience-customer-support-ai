@@ -8,7 +8,11 @@
     "When the purchase channel is not WaterScience.in, do not apply the WaterScience.in shipping or returns policy.",
     "Do not promise health, hair or skin outcomes. The current replacement-cartridge page itself says CLEO is not a medical device and hair fall can have other causes.",
     "When source records conflict, say that the information needs confirmation and create a human-review task.",
-    "For leaks, electrical/plumbing risks, damaged products, warranty determinations, returns/refunds, or suspected safety issues: collect evidence and escalate."
+    "For leaks, electrical/plumbing risks, damaged products, warranty determinations, returns/refunds, or suspected safety issues: collect evidence and escalate.",
+    "Negative compatibility rule: PURO HFS-625 is a self-cleaning faucet with no replacement cartridge; do not recommend PURO HFF cartridges for it.",
+    "Negative rule: RENO Cygnus uses softener salt/regeneration and is not a replacement-cartridge product. Keep salt and maintenance/service information strictly separate from cartridge recommendations.",
+    "Keep 10-inch and 20-inch RIO mainline cartridge mappings model-specific rather than universal (e.g., RIO-MLF-119 uses RIO-RC-119). Do not generalize cartridges across different mainline models.",
+    "Unverified mapping: Do not add or provide a confirmed KTF Wide/FLO-KTF-723 ceramic cartridge mapping; mark it as unverified/pending vendor confirmation and avoid definitive recommendations."
   ],
   "sources": {
     "S01": {
@@ -77,41 +81,105 @@
       "type": "legacy manual mirror, not current WaterScience domain",
       "accessed": "2026-10-28",
       "use_restriction": "Do not present detailed troubleshooting as current verified instructions without human confirmation."
+    },
+    "S11": {
+      "title": "VERSA Tap and Shower Filter Replacement Cartridges",
+      "url": "https://www.waterscience.in/products/versa-replacement-cartridge",
+      "type": "official product page",
+      "accessed": "2026-10-31"
+    },
+    "S12": {
+      "title": "PURO Filtered Health Faucet Replacement Cartridges",
+      "url": "https://www.waterscience.in/products/puro-replacement-cartridge-pack",
+      "type": "official product page",
+      "accessed": "2026-10-31"
+    },
+    "S13": {
+      "title": "RIO Mainline Filter Replacement Cartridges",
+      "url": "https://www.waterscience.in/products/rio-replacement-cartridge",
+      "type": "official product page",
+      "accessed": "2026-10-31"
     }
   },
   "portfolio_map": [
     {
       "category": "Shower and tap filters",
-      "representative_products": ["CLEO SFU-717", "CLEO multi-flow filters", "CLEO Kiddo hand shower filters"],
-      "replacement_or_accessory_examples": ["CLEO Metro/Municipal cartridge", "CLEO Borewell/Tanker cartridge", "tap aerator adapters"],
+      "representative_products": [
+        "CLEO SFU-717",
+        "CLEO multi-flow filters",
+        "CLEO Kiddo hand shower filters",
+        "VERSA STF-1025",
+        "VERSA SCF-725"
+      ],
+      "replacement_or_accessory_examples": [
+        "CLEO Metro/Municipal cartridge",
+        "CLEO Borewell/Tanker cartridge",
+        "tap aerator adapters",
+        "VERSA-STF-RC-1025-HHC pack of 2",
+        "VERSA-SCF-RC-725 pack of 3"
+      ],
       "prototype_status": "in_scope",
       "reason": "The initial product and its current official documentation are well covered."
     },
     {
       "category": "Appliance filters",
-      "representative_products": ["IRIS-WMF-325 washing-machine filter"],
-      "replacement_or_accessory_examples": ["IRIS-WMF-325 pack-of-two cartridge", "washing-machine descaler tablets"],
+      "representative_products": [
+        "IRIS-WMF-325 washing-machine filter"
+      ],
+      "replacement_or_accessory_examples": [
+        "IRIS-WMF-325 pack-of-two cartridge",
+        "washing-machine descaler tablets"
+      ],
       "prototype_status": "in_scope_limited",
       "reason": "Clear compatibility and replacement guidance make it a low-effort second product family."
     },
     {
       "category": "Kitchen tap filters and extenders",
-      "representative_products": ["FLO-KTF-723 Wide ceramic", "FLO-KTF-623 Mini", "AERA Compact/Wide/Flexi aerators"],
-      "replacement_or_accessory_examples": ["kitchen tap filter ceramic cartridge", "aerator adapters and washers"],
+      "representative_products": [
+        "FLO-KTF-723 Wide ceramic",
+        "FLO-KTF-623 Mini",
+        "AERA Compact/Wide/Flexi aerators"
+      ],
+      "replacement_or_accessory_examples": [
+        "kitchen tap filter ceramic cartridge (unverified mapping for KTF Wide/FLO-KTF-723)",
+        "aerator adapters and washers"
+      ],
       "prototype_status": "knowledge_only",
-      "reason": "Variants differ by fitment and some pages combine variants; include only explicit SKU facts."
+      "reason": "Variants differ by fitment; KTF Wide to ceramic cartridge mapping is unverified and pending vendor confirmation."
     },
     {
       "category": "Mainline filters and whole-home softeners",
-      "representative_products": ["RIO mainline filters", "RENO Cygnus", "RENO Aquilius", "RENO Altius"],
-      "replacement_or_accessory_examples": ["mainline replacement cartridges", "softener salt", "prefilter", "installation/service visit"],
+      "representative_products": [
+        "RIO mainline filters",
+        "RENO Cygnus",
+        "RENO Aquilius",
+        "RENO Altius",
+        "RIO-MLF-119"
+      ],
+      "replacement_or_accessory_examples": [
+        "RIO-RC-119 (model-specific)",
+        "mainline replacement cartridges",
+        "softener salt",
+        "prefilter",
+        "installation/service visit"
+      ],
       "prototype_status": "escalate_to_consultation",
       "reason": "Fitment, home configuration, location and installation scope need consultation."
     },
     {
       "category": "Health faucets and cleaning products",
-      "representative_products": ["PURO HFS-625", "PURO two-flow faucets", "washing-machine descaler tablets"],
-      "replacement_or_accessory_examples": ["additional faucet cartridge filter", "mesh washer", "teflon tape"],
+      "representative_products": [
+        "PURO HFS-625 (no cartridge)",
+        "PURO HFF-526-N",
+        "PURO HFF-626-N",
+        "PURO two-flow faucets",
+        "washing-machine descaler tablets"
+      ],
+      "replacement_or_accessory_examples": [
+        "PURO HFF shared cartridge pack of 6 (for HFF-526-N and HFF-626-N only; not HFS-625)",
+        "mesh washer",
+        "teflon tape"
+      ],
       "prototype_status": "knowledge_only",
       "reason": "Useful for product detection and escalation but not needed for the first 3-4 hour working demo."
     }
@@ -119,56 +187,82 @@
   "products": {
     "CLEO_SFU_717": {
       "name": "CLEO Shower & Tap Filter for Hard Water",
-      "aliases": ["CLEO SFU-717", "SFU 717", "CLEO shower/tap filter"],
+      "aliases": [
+        "CLEO SFU-717",
+        "SFU 717",
+        "CLEO shower/tap filter"
+      ],
       "applicability": "Exact CLEO SFU-717 only unless another CLEO model is explicitly named by an applicable source.",
       "verified_facts": [
         {
           "id": "cleo.fitment",
           "fact": "Fits metal-threaded taps, showers and hand showers; named tap sizes are 22 mm, 24 mm and 28 mm. Does not fit plastic taps.",
-          "source_ids": ["S01"],
+          "source_ids": [
+            "S01"
+          ],
           "confidence": "high"
         },
         {
           "id": "cleo.cartridge_selection",
           "fact": "Municipal/Metro is described for chlorine and moderate hardness; Borewell/Tanker for high hardness with no chlorine.",
-          "source_ids": ["S01"],
+          "source_ids": [
+            "S01"
+          ],
           "confidence": "high"
         },
         {
           "id": "cleo.maintenance",
           "fact": "The product page recommends cartridge replacement every six months, varying with usage and water quality.",
-          "source_ids": ["S01"],
+          "source_ids": [
+            "S01"
+          ],
           "confidence": "high"
         },
         {
           "id": "cleo.tds",
           "fact": "The product page says tap and shower filters do not reduce TDS.",
-          "source_ids": ["S01"],
+          "source_ids": [
+            "S01"
+          ],
           "confidence": "high"
         },
         {
           "id": "cleo.installation",
           "fact": "The page says the product installs in under three minutes and includes an installation kit; customers can use its linked video or contact support.",
-          "source_ids": ["S01"],
+          "source_ids": [
+            "S01"
+          ],
           "confidence": "high"
         }
       ],
       "conditional_guidance": [
         {
           "condition": "Customer asks which cartridge to select",
-          "collect_first": ["water source", "whether chlorine is expected", "TDS reading if available", "exact product/model"],
+          "collect_first": [
+            "water source",
+            "whether chlorine is expected",
+            "TDS reading if available",
+            "exact product/model"
+          ],
           "action": "Draft a recommendation only when the documented condition matches; otherwise ask for clarification or human review.",
-          "source_ids": ["S01", "S02"]
+          "source_ids": [
+            "S01",
+            "S02"
+          ]
         },
         {
           "condition": "Customer says TDS did not fall",
           "action": "Explain that the official product page says TDS is not reduced. Do not diagnose water safety or promise performance.",
-          "source_ids": ["S01"]
+          "source_ids": [
+            "S01"
+          ]
         },
         {
           "condition": "Customer reports low flow",
           "action": "State that the current cartridge FAQ attributes a drop to sediment blocking and refers to reverse flushing; direct to official support/video for the exact current procedure. Escalate if unresolved.",
-          "source_ids": ["S02"],
+          "source_ids": [
+            "S02"
+          ],
           "uncertainty": "The legacy manual has more steps but is not current-domain verified."
         }
       ],
@@ -176,129 +270,481 @@
         {
           "topic": "Maximum hot-water temperature",
           "records": [
-            {"value": "45°C; cold water first", "source_ids": ["S01"]},
-            {"value": "60°C; cold water first", "source_ids": ["S02"]}
+            {
+              "value": "45°C; cold water first",
+              "source_ids": [
+                "S01"
+              ]
+            },
+            {
+              "value": "60°C; cold water first",
+              "source_ids": [
+                "S02"
+              ]
+            }
           ],
           "safe_action": "Do not answer automatically. Flag a documentation conflict and request support confirmation."
         },
         {
           "topic": "Replacement timing",
           "records": [
-            {"value": "every six months, varies by use/water quality", "source_ids": ["S01"]},
-            {"value": "4-6 months and separately every six months", "source_ids": ["S02"]}
+            {
+              "value": "every six months, varies by use/water quality",
+              "source_ids": [
+                "S01"
+              ]
+            },
+            {
+              "value": "4-6 months and separately every six months",
+              "source_ids": [
+                "S02"
+              ]
+            }
           ],
           "safe_action": "Use a 4-6 month guidance range plus condition caveat; do not call it a warranty entitlement."
         }
       ],
-      "escalate_when": ["fixture material/thread size is unknown", "leak is reported", "temperature question", "cartridge type cannot be matched", "health/medical claim", "warranty/return/replacement request"]
+      "escalate_when": [
+        "fixture material/thread size is unknown",
+        "leak is reported",
+        "temperature question",
+        "cartridge type cannot be matched",
+        "health/medical claim",
+        "warranty/return/replacement request"
+      ]
     },
     "CLEO_REPLACEMENT_CARTRIDGE": {
       "name": "CLEO Replacement Cartridge for Shower & Tap Filters",
-      "aliases": ["CLEO RC", "CLEO cartridge", "SFC-UW-100-HHC"],
+      "aliases": [
+        "CLEO-RC-100-SC",
+        "CLEO-RC-100-HHC",
+        "CLEO RC",
+        "CLEO cartridge",
+        "SFC-UW-100-HHC"
+      ],
       "verified_facts": [
         {
           "id": "cleo_rc.compatibility",
           "fact": "The page names compatible CLEO models: SFU-717, SFU-1020, SFM-419, SFA-520, SFS-423, SFR-923, SFR-519, Kiddo Duo and SFW-815.",
-          "source_ids": ["S02"],
+          "source_ids": [
+            "S02"
+          ],
           "confidence": "high"
         },
         {
           "id": "cleo_rc.selection",
           "fact": "Metro/Municipal: chlorine and hardness, TDS below 800 ppm. Borewell/Tanker: high hardness with no chlorine, TDS up to 1800 ppm.",
-          "source_ids": ["S02"],
+          "source_ids": [
+            "S02"
+          ],
           "confidence": "high"
         },
         {
           "id": "cleo_rc.installation",
           "fact": "The FAQ says to insert the replacement red side up and run water for a couple of minutes after replacement to flush carbon dust.",
-          "source_ids": ["S02"],
+          "source_ids": [
+            "S02"
+          ],
           "confidence": "high"
         }
       ],
-      "escalate_when": ["model is not on compatibility list", "cartridge does not seat", "leak occurs after replacement", "hot-water question", "customer asks for a refund/replacement"]
+      "escalate_when": [
+        "model is not on compatibility list",
+        "cartridge does not seat",
+        "leak occurs after replacement",
+        "hot-water question",
+        "customer asks for a refund/replacement"
+      ]
     },
     "IRIS_WMF_325": {
       "name": "Washing Machine Filter for Hard Water - IRIS-WMF-325",
-      "aliases": ["IRIS washing machine filter", "WMF-325"],
+      "aliases": [
+        "IRIS washing machine filter",
+        "WMF-325"
+      ],
       "verified_facts": [
         {
           "id": "iris.fitment",
           "fact": "The page says the supplied hose adapter supports all brands' automatic top- and front-load machines; inlet connects to 1/2-inch BSP and 1/2-inch or 24-mm externally threaded taps.",
-          "source_ids": ["S06"],
+          "source_ids": [
+            "S06"
+          ],
           "confidence": "high"
         },
         {
           "id": "iris.replacement",
           "fact": "Replacement guidance: top-load 3-4 months and front-load 4-6 months, depending on machine and water quality.",
-          "source_ids": ["S06"],
+          "source_ids": [
+            "S06"
+          ],
           "confidence": "high"
         },
         {
           "id": "iris.warranty",
           "fact": "Product page lists a one-year warranty.",
-          "source_ids": ["S06"],
+          "source_ids": [
+            "S06"
+          ],
           "confidence": "high"
         }
       ],
-      "escalate_when": ["machine is not automatic", "tap type cannot be identified", "leak/damage", "warranty decision"]
+      "escalate_when": [
+        "machine is not automatic",
+        "tap type cannot be identified",
+        "leak/damage",
+        "warranty decision"
+      ]
     },
     "KTF_WIDE_CERAMIC": {
       "name": "KTF Kitchen Tap Extender with Sediment and Dust Filter - Wide ceramic cartridge",
-      "aliases": ["FLO-KTF-723", "KTF Wide"],
+      "aliases": [
+        "FLO-KTF-723",
+        "KTF Wide"
+      ],
       "verified_facts": [
         {
           "id": "ktf.wide.fitment",
           "fact": "Wide variant page lists 20, 22 and 24 mm male/female aerators and hot-water compatibility up to 40°C.",
-          "source_ids": ["S07"],
+          "source_ids": [
+            "S07"
+          ],
           "confidence": "high"
         },
         {
           "id": "ktf.wide.box",
           "fact": "The page lists tap filter, aerator, adapter, washers and two replacement cartridges.",
-          "source_ids": ["S07"],
+          "source_ids": [
+            "S07"
+          ],
           "confidence": "high"
+        },
+        {
+          "id": "ktf.wide.cartridge_status",
+          "fact": "Standalone ceramic replacement cartridge mapping for KTF Wide / FLO-KTF-723 is UNVERIFIED and pending vendor confirmation. The assistant must NOT make a definitive cartridge recommendation for this model until confirmed.",
+          "source_ids": [
+            "S07",
+            "S10"
+          ],
+          "confidence": "low",
+          "status": "unverified_pending_vendor_confirmation"
         }
       ],
-      "uncertainty": "This product page also shows a Mini variant. Do not transfer Wide specifications to Mini without separate evidence.",
-      "escalate_when": ["customer has Mini or unknown KTF variant", "26-mm or plastic/no-aerator tap", "potable-water question", "leak/damage"]
+      "uncertainty": "Standalone ceramic replacement cartridge mapping for KTF Wide / FLO-KTF-723 is unverified and pending vendor confirmation; do not provide a definitive cartridge recommendation. Also, this product page shows a Mini variant; do not transfer Wide specifications to Mini without separate evidence.",
+      "escalate_when": [
+        "customer has Mini or unknown KTF variant",
+        "26-mm or plastic/no-aerator tap",
+        "potable-water question",
+        "leak/damage",
+        "definitive ceramic cartridge recommendation requested (unverified mapping)"
+      ]
     },
     "RENO_CYGNUS": {
       "name": "RENO Cygnus Water Softener",
-      "aliases": ["RENO Cygnus", "RENO 1500", "RENO 2000"],
+      "aliases": [
+        "RENO Cygnus",
+        "RENO 1500",
+        "RENO 2000"
+      ],
       "verified_facts": [
         {
           "id": "reno.contents",
           "fact": "Product page lists the softener, prefilter casing/sediment filter, connecting accessories, stand, starter salt and hardness kit; input/output plumbing material is not included.",
-          "source_ids": ["S08"],
+          "source_ids": [
+            "S08"
+          ],
           "confidence": "high"
         },
         {
           "id": "reno.warranty",
           "fact": "Product page lists two years for valve and electronics; physical damage is not covered.",
-          "source_ids": ["S08"],
+          "source_ids": [
+            "S08"
+          ],
+          "confidence": "high"
+        },
+        {
+          "id": "reno.negative_cartridge_rule",
+          "fact": "Negative rule: RENO Cygnus is an ion-exchange water softener that uses softener salt pellets/tablets for resin regeneration and is NOT a replacement-cartridge product. Keep softener salt consumables and maintenance/service information strictly separate from cartridge recommendations.",
+          "source_ids": [
+            "S08",
+            "S10"
+          ],
           "confidence": "high"
         }
       ],
-      "escalate_when": ["product recommendation", "installation estimate", "home sizing", "location/serviceability", "fault/warranty"]
+      "escalate_when": [
+        "product recommendation",
+        "installation estimate",
+        "home sizing",
+        "location/serviceability",
+        "fault/warranty",
+        "cartridge replacement inquiry (softener uses salt regeneration, not cartridges)"
+      ]
     },
     "PURO_HFS_625": {
       "name": "PURO HFS-625 self-cleaning health faucet",
-      "aliases": ["NeverBlock health faucet", "PURO HFS-625"],
+      "aliases": [
+        "NeverBlock health faucet",
+        "PURO HFS-625"
+      ],
       "verified_facts": [
         {
           "id": "puro.fitment",
           "fact": "Fits standard 1/2-inch hoses.",
-          "source_ids": ["S09"],
+          "source_ids": [
+            "S09"
+          ],
           "confidence": "high"
         },
         {
           "id": "puro.warranty",
           "fact": "The page lists a two-year warranty for the faucet that covers breakage and damages.",
-          "source_ids": ["S09"],
+          "source_ids": [
+            "S09"
+          ],
+          "confidence": "high"
+        },
+        {
+          "id": "puro_hfs_625.no_cartridge",
+          "fact": "Negative compatibility rule: PURO HFS-625 is a self-cleaning faucet with NeverBlock technology and has NO replacement cartridge. Do not recommend or suggest PURO HFF replacement cartridges for this model.",
+          "source_ids": [
+            "S09"
+          ],
           "confidence": "high"
         }
       ],
-      "escalate_when": ["leak", "fault", "breakage", "warranty assessment"]
+      "escalate_when": [
+        "leak",
+        "fault",
+        "breakage",
+        "warranty assessment",
+        "cartridge recommendation inquiry (has no replacement cartridge)"
+      ]
+    },
+    "VERSA_STF_1025": {
+      "name": "VERSA STF-1025 Shower & Tap Filter",
+      "aliases": [
+        "VERSA STF-1025",
+        "STF-1025",
+        "VERSA STF 1025"
+      ],
+      "applicability": "Exact VERSA STF-1025 model only.",
+      "verified_facts": [
+        {
+          "id": "versa_stf_1025.cartridge_compatibility",
+          "fact": "VERSA STF-1025 is compatible specifically with the VERSA-STF-RC-1025-HHC replacement cartridge, which is sold as a pack of 2.",
+          "source_ids": [
+            "S10",
+            "S11"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "leak",
+        "damage",
+        "unverified model variant",
+        "warranty request"
+      ]
+    },
+    "VERSA_STF_RC_1025_HHC": {
+      "name": "VERSA-STF-RC-1025-HHC Replacement Cartridge (Pack of 2)",
+      "aliases": [
+        "VERSA-STF-RC-1025-HHC",
+        "STF-RC-1025-HHC",
+        "VERSA STF replacement cartridge"
+      ],
+      "applicability": "Verified exclusively for VERSA STF-1025 shower and tap filter.",
+      "verified_facts": [
+        {
+          "id": "versa_stf_rc.compatibility",
+          "fact": "Replacement cartridge specifically compatible with VERSA STF-1025 shower and tap filter. Pack contains 2 replacement cartridges.",
+          "source_ids": [
+            "S10",
+            "S11"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "incompatible model",
+        "leak after cartridge replacement"
+      ]
+    },
+    "VERSA_SCF_725": {
+      "name": "VERSA SCF-725 Shower Filter",
+      "aliases": [
+        "VERSA SCF-725",
+        "SCF-725",
+        "VERSA SCF 725"
+      ],
+      "applicability": "Exact VERSA SCF-725 model only.",
+      "verified_facts": [
+        {
+          "id": "versa_scf_725.cartridge_compatibility",
+          "fact": "VERSA SCF-725 is compatible specifically with the VERSA-SCF-RC-725 replacement cartridge, which is sold as a pack of 3.",
+          "source_ids": [
+            "S10",
+            "S11"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "leak",
+        "damage",
+        "unverified model variant",
+        "warranty request"
+      ]
+    },
+    "VERSA_SCF_RC_725": {
+      "name": "VERSA-SCF-RC-725 Replacement Cartridge (Pack of 3)",
+      "aliases": [
+        "VERSA-SCF-RC-725",
+        "SCF-RC-725",
+        "VERSA SCF replacement cartridge"
+      ],
+      "applicability": "Verified exclusively for VERSA SCF-725 shower filter.",
+      "verified_facts": [
+        {
+          "id": "versa_scf_rc.compatibility",
+          "fact": "Replacement cartridge specifically compatible with VERSA SCF-725 shower filter. Pack contains 3 replacement cartridges.",
+          "source_ids": [
+            "S10",
+            "S11"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "incompatible model",
+        "leak after cartridge replacement"
+      ]
+    },
+    "PURO_HFF_526_N": {
+      "name": "PURO HFF-526-N Filtered Health Faucet",
+      "aliases": [
+        "PURO HFF-526-N",
+        "HFF-526-N",
+        "HFF 526 N"
+      ],
+      "applicability": "Exact PURO HFF-526-N model only.",
+      "verified_facts": [
+        {
+          "id": "puro_hff_526.cartridge",
+          "fact": "Compatible with the shared PURO filtered health faucet replacement cartridge pack of 6 (shared with PURO HFF-626-N). Negative compatibility rule: Not compatible with PURO HFS-625.",
+          "source_ids": [
+            "S10",
+            "S12"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "leak",
+        "damage",
+        "warranty request"
+      ]
+    },
+    "PURO_HFF_626_N": {
+      "name": "PURO HFF-626-N Filtered Health Faucet",
+      "aliases": [
+        "PURO HFF-626-N",
+        "HFF-626-N",
+        "HFF 626 N"
+      ],
+      "applicability": "Exact PURO HFF-626-N model only.",
+      "verified_facts": [
+        {
+          "id": "puro_hff_626.cartridge",
+          "fact": "Compatible with the shared PURO filtered health faucet replacement cartridge pack of 6 (shared with PURO HFF-526-N). Negative compatibility rule: Not compatible with PURO HFS-625.",
+          "source_ids": [
+            "S10",
+            "S12"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "leak",
+        "damage",
+        "warranty request"
+      ]
+    },
+    "PURO_HFF_REPLACEMENT_CARTRIDGE_PACK_6": {
+      "name": "PURO Filtered Health Faucet Replacement Cartridge (Pack of 6)",
+      "aliases": [
+        "PURO HFF replacement cartridge",
+        "PURO HFF cartridge pack of 6",
+        "PURO cartridge pack of 6",
+        "HFF replacement cartridge"
+      ],
+      "applicability": "Verified exclusively for PURO HFF-526-N and PURO HFF-626-N filtered health faucets.",
+      "verified_facts": [
+        {
+          "id": "puro_hff_rc.compatibility",
+          "fact": "Shared replacement cartridge pack of 6 compatible with PURO HFF-526-N and PURO HFF-626-N filtered health faucets. Negative compatibility rule: This cartridge is NOT compatible with PURO HFS-625 (PURO HFS-625 is a self-cleaning faucet and has no replacement cartridge).",
+          "source_ids": [
+            "S10",
+            "S12"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "customer inquires for PURO HFS-625",
+        "leak after cartridge replacement"
+      ]
+    },
+    "RIO_MLF_119": {
+      "name": "RIO-MLF-119 Mainline Filter",
+      "aliases": [
+        "RIO-MLF-119",
+        "RIO MLF 119",
+        "MLF-119"
+      ],
+      "applicability": "Exact RIO-MLF-119 mainline filter model only.",
+      "verified_facts": [
+        {
+          "id": "rio_mlf_119.cartridge_compatibility",
+          "fact": "Compatible specifically with RIO-RC-119 replacement cartridge. Mainline filter cartridge mappings must be kept model-specific; 10-inch and 20-inch cartridges are not universally interchangeable across all mainline filter models.",
+          "source_ids": [
+            "S10",
+            "S13"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "universal cartridge compatibility inquiry",
+        "leak",
+        "plumbing installation query",
+        "warranty request"
+      ]
+    },
+    "RIO_RC_119": {
+      "name": "RIO-RC-119 Mainline Filter Replacement Cartridge",
+      "aliases": [
+        "RIO-RC-119",
+        "RIO RC 119",
+        "RC-119"
+      ],
+      "applicability": "Verified explicitly for RIO-MLF-119 mainline filter only.",
+      "verified_facts": [
+        {
+          "id": "rio_rc_119.compatibility",
+          "fact": "Replacement cartridge explicitly verified for RIO-MLF-119 mainline filter. 10-inch and 20-inch mainline cartridge mappings must remain model-specific rather than universal.",
+          "source_ids": [
+            "S10",
+            "S13"
+          ],
+          "confidence": "high"
+        }
+      ],
+      "escalate_when": [
+        "unsupported RIO model",
+        "universal 10-inch or 20-inch mapping request"
+      ]
     }
   },
   "policy_facts": {
@@ -307,11 +753,15 @@
       "facts": [
         {
           "fact": "Warranty requires registration within seven days with serial number or a valid invoice; the company may request photos/videos.",
-          "source_ids": ["S03"]
+          "source_ids": [
+            "S03"
+          ]
         },
         {
           "fact": "CLEO shower-filter cartridges have a 90-day manufacturing-defect warranty, excluding sediment choking and prolonged disuse among other exclusions.",
-          "source_ids": ["S03"]
+          "source_ids": [
+            "S03"
+          ]
         }
       ]
     },
@@ -320,15 +770,21 @@
       "facts": [
         {
           "fact": "CLEO website purchases have a stated 60-day return policy; other website products generally have seven days, subject to stated conditions.",
-          "source_ids": ["S04"]
+          "source_ids": [
+            "S04"
+          ]
         },
         {
           "fact": "The policy names damaged/defective items or a different item received as return conditions and requests photo/video evidence for damage or difference.",
-          "source_ids": ["S04"]
+          "source_ids": [
+            "S04"
+          ]
         },
         {
           "fact": "Eligible refund initiation is stated as within seven working days after the applicable request or post-delivery pickup; a Rs. 99 pickup charge may apply.",
-          "source_ids": ["S04"]
+          "source_ids": [
+            "S04"
+          ]
         }
       ]
     },
@@ -337,7 +793,9 @@
       "facts": [
         {
           "fact": "Most orders are stated to dispatch in 2-3 business days, then take 3-4 business days in Bengaluru or 5-6 elsewhere in India, subject to location and delivery-partner factors.",
-          "source_ids": ["S05"]
+          "source_ids": [
+            "S05"
+          ]
         }
       ]
     },
@@ -345,11 +803,15 @@
       "facts": [
         {
           "fact": "General after-sales support: care@waterscience.in, 1800-121-0599, WhatsApp 9148545840; Monday-Saturday, 09:30-20:30.",
-          "source_ids": ["S03"]
+          "source_ids": [
+            "S03"
+          ]
         },
         {
           "fact": "The returns page gives Mon-Sat, 09:30-18:30 for a return request call.",
-          "source_ids": ["S04"]
+          "source_ids": [
+            "S04"
+          ]
         }
       ]
     }
@@ -358,25 +820,44 @@
     {
       "rule_id": "R01",
       "if": "product/SKU or variant is unknown",
-      "ask_for": ["product name/model from label or order", "photo if customer consents", "purchase channel"],
+      "ask_for": [
+        "product name/model from label or order",
+        "photo if customer consents",
+        "purchase channel"
+      ],
       "route": "clarification"
     },
     {
       "rule_id": "R02",
       "if": "compatibility request",
-      "ask_for": ["fixture type", "thread size or photo", "metal/plastic", "water source when cartridge type matters"],
+      "ask_for": [
+        "fixture type",
+        "thread size or photo",
+        "metal/plastic",
+        "water source when cartridge type matters"
+      ],
       "route": "verified-answer only when exact product record matches"
     },
     {
       "rule_id": "R03",
       "if": "return/refund/replacement/warranty request",
-      "ask_for": ["purchase channel", "order/invoice", "delivery/purchase date", "photos/videos for damage where applicable"],
+      "ask_for": [
+        "purchase channel",
+        "order/invoice",
+        "delivery/purchase date",
+        "photos/videos for damage where applicable"
+      ],
       "route": "human escalation; draft may explain documented process but must not decide outcome"
     },
     {
       "rule_id": "R04",
       "if": "leak, damage, unsafe installation or unresolved loss of flow",
-      "ask_for": ["whether water can be safely shut off", "photos/video", "SKU", "date of purchase"],
+      "ask_for": [
+        "whether water can be safely shut off",
+        "photos/video",
+        "SKU",
+        "date of purchase"
+      ],
       "route": "human escalation"
     },
     {
@@ -390,6 +871,36 @@
       "if": "source conflict is attached to retrieved fact",
       "ask_for": [],
       "route": "human escalation with both source IDs displayed"
+    },
+    {
+      "rule_id": "R07",
+      "if": "cartridge inquiry for PURO HFS-625",
+      "ask_for": [],
+      "route": "inform customer that PURO HFS-625 has no replacement cartridge (NeverBlock self-cleaning mechanism); do not recommend PURO HFF cartridges"
+    },
+    {
+      "rule_id": "R08",
+      "if": "cartridge inquiry for RENO Cygnus",
+      "ask_for": [],
+      "route": "inform customer that RENO Cygnus is a salt-regeneration softener and does not take filter cartridges; direct to softener salt or service consultation"
+    },
+    {
+      "rule_id": "R09",
+      "if": "cartridge inquiry for KTF Wide / FLO-KTF-723",
+      "ask_for": [
+        "exact model photo",
+        "aerator threading"
+      ],
+      "route": "escalate or flag as unverified pending vendor confirmation; do not recommend a ceramic cartridge definitively"
+    },
+    {
+      "rule_id": "R10",
+      "if": "mainline RIO cartridge compatibility inquiry",
+      "ask_for": [
+        "exact RIO model number",
+        "housing height (10-inch vs 20-inch)"
+      ],
+      "route": "provide model-specific verified mapping only (e.g. RIO-MLF-119 -> RIO-RC-119); do not offer universal 10-inch/20-inch replacements without SKU confirmation"
     }
   ]
 }

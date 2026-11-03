@@ -109,6 +109,37 @@ class PolicyRulesEngine:
                 information_needed.extend(["Photo/video", "invoice/order", "purchase channel", "whether water can safely be shut off"])
             return escalate, escalation_reason, information_needed, applied_guardrails, ReviewStatus.ESCALATED_TO_HUMAN
 
+        # Negative Compatibility Rule: PURO HFS-625 cartridge inquiry (NeverBlock, no replacement cartridge)
+        if (detected_product == "PURO HFS-625" or "hfs-625" in t or "hfs 625" in t) and any(w in t for w in ["cartridge", "replacement", "hff"]):
+            applied_guardrails.append("Negative Compatibility Rule: PURO HFS-625 has no replacement cartridge; do not recommend PURO HFF cartridges")
+            escalate = False
+            return escalate, escalation_reason, information_needed, applied_guardrails, ReviewStatus.READY_FOR_APPROVAL
+
+        # Negative Rule: RENO Cygnus cartridge inquiry (softener uses salt regeneration, not cartridges)
+        if detected_product in ["RENO Cygnus", "RENO_CYGNUS"] and any(w in t for w in ["cartridge", "replacement", "refill", "filter pack"]):
+            applied_guardrails.append("Negative Softener Rule: RENO Cygnus uses salt regeneration and is not a replacement-cartridge product")
+            escalate = False
+            information_needed.append("Clarify if customer needs softener salt pellets or routine maintenance service.")
+            return escalate, escalation_reason, information_needed, applied_guardrails, ReviewStatus.READY_FOR_APPROVAL
+
+        # Unverified Mapping Rule: KTF Wide / FLO-KTF-723 ceramic cartridge mapping pending vendor confirmation
+        if ("ktf" in t or "kitchen tap" in t or detected_product in ["KTF_WIDE_CERAMIC", "KTF variant unknown", "KTF Kitchen Tap Extender"]) and (
+            any(w in t for w in ["cartridge", "ceramic", "replacement"])
+        ):
+            applied_guardrails.append("Unverified Mapping Guardrail: KTF Wide / FLO-KTF-723 ceramic cartridge mapping is unverified and pending vendor confirmation")
+            escalate = True
+            escalation_reason = "KTF Wide / FLO-KTF-723 ceramic replacement cartridge mapping is unverified and pending vendor confirmation; avoid definitive recommendation."
+            information_needed.extend(["Exact tap and aerator threading", "photo of existing KTF unit"])
+            return escalate, escalation_reason, information_needed, applied_guardrails, ReviewStatus.ESCALATED_TO_HUMAN
+
+        # RIO Mainline Cartridge Model-Specific Rule (rejecting universal 10/20-inch assumptions)
+        if ("rio" in t or detected_product == "RIO-MLF-119") and any(w in t for w in ["universal", "any 10", "any 20", "interchangeable", "standard 10", "standard 20"]):
+            applied_guardrails.append("Mainline Model-Specific Guardrail: 10-inch/20-inch RIO cartridges are not universal")
+            escalate = True
+            escalation_reason = "10-inch and 20-inch mainline cartridge mappings must be kept model-specific rather than universal."
+            information_needed.append("Exact RIO housing model number and housing height (10-inch vs 20-inch)")
+            return escalate, escalation_reason, information_needed, applied_guardrails, ReviewStatus.ESCALATED_TO_HUMAN
+
         # Guardrail 5: Whole-home water softeners & Industrial consultation (RENO Cygnus)
         if issue_category == "whole_home_consultation" or detected_product in ["RENO Cygnus", "RENO_CYGNUS"] or any(w in t for w in ["reno", "cygnus", "whole home", "softener", "textile", "plant", "effluent"]):
             applied_guardrails.append("Consultation Guardrail: Whole-home softener sizing, serviceability, and pricing require consultation")

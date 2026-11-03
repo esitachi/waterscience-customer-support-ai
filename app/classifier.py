@@ -30,6 +30,16 @@ class IssueClassifier:
                 detected_product = "CLEO SFU-717"
             elif "iris" in hint_lower or "wmf" in hint_lower:
                 detected_product = "IRIS-WMF-325"
+            elif "stf-1025" in hint_lower or "stf 1025" in hint_lower:
+                detected_product = "VERSA STF-1025"
+            elif "scf-725" in hint_lower or "scf 725" in hint_lower:
+                detected_product = "VERSA SCF-725"
+            elif "hff-526" in hint_lower or "hff 526" in hint_lower:
+                detected_product = "PURO HFF-526-N"
+            elif "hff-626" in hint_lower or "hff 626" in hint_lower:
+                detected_product = "PURO HFF-626-N"
+            elif "mlf-119" in hint_lower or "mlf 119" in hint_lower or "rio" in hint_lower:
+                detected_product = "RIO-MLF-119"
             elif "ktf" in hint_lower:
                 if "wide" in hint_lower or "ceramic" in hint_lower:
                     detected_product = "KTF Kitchen Tap Extender"
@@ -37,7 +47,9 @@ class IssueClassifier:
                     detected_product = "KTF variant unknown"
             elif "reno" in hint_lower or "cygnus" in hint_lower:
                 detected_product = "RENO Cygnus"
-            elif "puro" in hint_lower or "hfs" in hint_lower:
+            elif "hfs-625" in hint_lower or "hfs 625" in hint_lower:
+                detected_product = "PURO HFS-625"
+            elif "puro" in hint_lower or "health faucet" in hint_lower:
                 detected_product = "PURO HFS-625"
             elif "cartridge" in hint_lower:
                 detected_product = "CLEO replacement cartridge"
@@ -45,6 +57,16 @@ class IssueClassifier:
         if not detected_product:
             if "sfu-717" in t or "sfu 717" in t or "sfu717" in t:
                 detected_product = "CLEO SFU-717"
+            elif "stf-1025" in t or "stf 1025" in t or "stf1025" in t or ("versa" in t and "1025" in t):
+                detected_product = "VERSA STF-1025"
+            elif "scf-725" in t or "scf 725" in t or "scf725" in t or ("versa" in t and "725" in t):
+                detected_product = "VERSA SCF-725"
+            elif "hff-526" in t or "hff 526" in t:
+                detected_product = "PURO HFF-526-N"
+            elif "hff-626" in t or "hff 626" in t:
+                detected_product = "PURO HFF-626-N"
+            elif "mlf-119" in t or "mlf 119" in t or "rio-mlf-119" in t or ("rio" in t and "mainline" in t):
+                detected_product = "RIO-MLF-119"
             elif "iris" in t or "wmf-325" in t or "wmf 325" in t or "washing machine" in t or "front load" in t or "top load" in t or "top loader" in t or "front-load" in t:
                 detected_product = "IRIS-WMF-325"
             elif ("ktf" in t or "kitchen tap extender" in t) and ("cleo" not in t and "sfu" not in t):
@@ -54,10 +76,12 @@ class IssueClassifier:
                     detected_product = "KTF variant unknown"
             elif "reno" in t or "cygnus" in t or "whole home" in t or "softener" in t:
                 detected_product = "RENO Cygnus"
-            elif "puro" in t or "health faucet" in t or "hfs-625" in t:
+            elif "hfs-625" in t or "hfs 625" in t or "hfs625" in t:
+                detected_product = "PURO HFS-625"
+            elif "puro" in t or "health faucet" in t:
                 detected_product = "PURO HFS-625"
             elif "cleo" in t:
-                if "cartridge" in t or "borewell" in t or "metro" in t or "municipal" in t:
+                if "cartridge" in t or "borewell" in t or "metro" in t or "municipal" in t or "cleo-rc" in t:
                     detected_product = "CLEO replacement cartridge"
                 else:
                     detected_product = "CLEO SFU-717"
@@ -91,7 +115,7 @@ class IssueClassifier:
             source_ids = ["S02"]
 
         # Product fault / faucet trigger fault (check before generic filter leak)
-        elif "puro" in t or ("health faucet" in t and any(w in t for w in ["leak", "trigger", "fault"])) or "trigger work nahi" in t:
+        elif (("puro" in t or "health faucet" in t) and any(w in t for w in ["leak", "trigger", "fault", "work nahi", "tuta", "defective", "broken"])) or "trigger work nahi" in t:
             category = "product_fault"
             detected_product = "PURO HFS-625"
             source_ids = ["S09", "S03"]
@@ -143,6 +167,31 @@ class IssueClassifier:
             category = "cartridge_life"
             detected_product = detected_product or "IRIS-WMF-325"
             source_ids = ["S06"]
+
+        # Model-Specific Cartridge Selection & Replacement Inquiries
+        elif any(w in t for w in ["cartridge", "replacement", "refill", "filter pack", "pack of"]) and (
+            detected_product in [
+                "VERSA STF-1025", "VERSA SCF-725", "PURO HFF-526-N", "PURO HFF-626-N",
+                "PURO HFS-625", "RIO-MLF-119", "RENO Cygnus"
+            ] or (detected_product in ["KTF variant unknown", "KTF Kitchen Tap Extender"] and ("cartridge" in t or "ceramic" in t))
+        ):
+            category = "cartridge_selection"
+            if detected_product == "VERSA STF-1025":
+                source_ids = ["S10", "S11"]
+            elif detected_product == "VERSA SCF-725":
+                source_ids = ["S10", "S11"]
+            elif detected_product in ["PURO HFF-526-N", "PURO HFF-626-N"]:
+                source_ids = ["S10", "S12"]
+            elif detected_product == "PURO HFS-625":
+                source_ids = ["S09", "S10"]
+            elif detected_product == "RIO-MLF-119":
+                source_ids = ["S10", "S13"]
+            elif detected_product == "RENO Cygnus":
+                source_ids = ["S08", "S10"]
+            elif "ktf" in str(detected_product).lower() or "kitchen" in str(detected_product).lower():
+                source_ids = ["S07", "S10"]
+            else:
+                source_ids = ["S10"]
 
         # Cartridge Selection & Media Inquiries (Municipal vs Borewell, KDF/composition)
         elif any(w in t for w in ["borewell", "metro", "municipal", "tanker", "cauvery", "chlorine", "cartridge loon", "which cartridge", "kdf", "zinc and copper", "chemical percentage", "proprietary chemical"]):

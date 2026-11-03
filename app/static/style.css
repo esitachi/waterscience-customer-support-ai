@@ -1086,3 +1086,9 @@ body {
 .close-btn:hover {
     color: var(--text-primary);
 }
+
+.active-subtab {
+    background-color: var(--primary) !important;
+    color: #FFFFFF !important;
+    border-color: var(--primary) !important;
+}

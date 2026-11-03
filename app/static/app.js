@@ -579,33 +579,93 @@ function closeModal() {
     document.getElementById('case-modal').classList.remove('active');
 }
 
-function renderKBSources() {
+function switchKBSubTab(subTabId) {
+    ['sources', 'products', 'rules'].forEach(id => {
+        const btn = document.getElementById(`subtab-${id}-btn`);
+        const pane = document.getElementById(`kb-subtab-${id}`);
+        if (btn) btn.classList.toggle('active-subtab', id === subTabId);
+        if (pane) pane.style.display = (id === subTabId) ? 'block' : 'none';
+    });
+}
+
+async function renderKBSources() {
     const grid = document.getElementById('kb-sources-grid');
     if (!grid) return;
 
-    const sources = [
-        { id: "S01", title: "CLEO Shower & Tap Filter for Hard Water", type: "Official Product Page", url: "https://www.waterscience.in/products/shower-tap-filter-cleo-sfu-717", desc: "Fits 22, 24, 28 mm metal-threaded taps; plastic taps do not fit; max 45°C temp; does not reduce TDS." },
-        { id: "S02", title: "CLEO Replacement Cartridge for Shower & Tap Filters", type: "Official Product Page", url: "https://www.waterscience.in/products/replacement-cartridge-filter", desc: "Municipal/Metro (<800 ppm, chlorine) vs Borewell/Tanker (up to 1800 ppm, no chlorine); 4-6 months lifecycle; max 60°C temp (source conflict)." },
-        { id: "S03", title: "Warranty & Support Policy", type: "Official Policy Page", url: "https://www.waterscience.in/pages/warranty-support-1", desc: "Requires 7-day registration or valid tax invoice with serial number; 5-yr CLEO filter warranty; 90-day cartridge defect warranty." },
-        { id: "S04", title: "Returns & Refund Policy", type: "Official Policy Page", url: "https://www.waterscience.in/pages/returns-refund", desc: "Applies to WaterScience website orders only; 60 days for CLEO, 7 days for other products; damaged/defective condition proof required." },
-        { id: "S05", title: "Billing & Shipping Policy", type: "Official Policy Page", url: "https://www.waterscience.in/pages/billing-shipping-policy-new", desc: "WaterScience website orders: 2-3 business days dispatch, 3-4 days Bengaluru transit, 5-6 days rest of India." },
-        { id: "S06", title: "IRIS-WMF-325 Washing Machine Filter", type: "Official Product Page", url: "https://www.waterscience.in/products/washing-machine-filter-for-hard-water-replaceable-cartridge", desc: "Supplied adapter fits automatic top/front-load machines; 1/2-inch BSP / 24-mm threads; 3-4 mo top-load, 4-6 mo front-load." },
-        { id: "S07", title: "KTF Kitchen Tap Extender with Filter", type: "Official Product Page", url: "https://www.waterscience.in/products/kitchen-tap-extender-with-filter-wide-ceramic-cartridge", desc: "Wide ceramic variant lists 20/22/24 mm male/female aerators; max 40°C temp; NOT certified for drinking water." },
-        { id: "S08", title: "RENO Cygnus Water Softeners", type: "Official Product Page", url: "https://www.waterscience.in/products/water-softener", desc: "Whole-home softeners; includes prefilter, stand, starter salt; plumbing input/output excluded; requires on-site consultation." },
-        { id: "S09", title: "PURO HFS-625 Self-cleaning Health Faucet", type: "Official Product Page", url: "https://www.waterscience.in/products/waterscience-water-saving-health-faucet-neverblock-technology-puro-hfs-625-c", desc: "Standard 1/2-inch hose fitment; 2-year breakage & damage warranty; leak triage requires valve shut-off and photo evidence." },
-        { id: "S10", title: "WaterScience Replacement Cartridges Collection", type: "Official Collection Page", url: "https://www.waterscience.in/collections/replacement-cartridges", desc: "13 distinct cartridges across families; cartridges are not universally interchangeable." },
-        { id: "M01", title: "CLEO 2 Manual Mirror (Sep11 PDF)", type: "Legacy Manual Mirror", url: "https://m.media-amazon.com/images/I/B1xekuVv3HS.pdf", desc: "Detailed legacy O-ring & flow restrictor steps; unverified for current models; restricted to internal agent triage." }
-    ];
+    try {
+        const res = await fetch('/api/knowledge-base');
+        if (!res.ok) throw new Error('Failed to load KB data');
+        const kbData = await res.json();
 
-    grid.innerHTML = sources.map(s => `
-        <div class="kb-card">
-            <div class="kb-card-header">
-                <span class="citation-id">${s.id}</span>
-                <span class="badge badge-outline">${s.type}</span>
+        // Update counts
+        const srcCountElem = document.getElementById('count-sources');
+        const prodCountElem = document.getElementById('count-products');
+        if (srcCountElem) srcCountElem.textContent = kbData.sources_count;
+        if (prodCountElem) prodCountElem.textContent = kbData.products_count;
+
+        const kbBadge = document.getElementById('kb-badge');
+        if (kbBadge) kbBadge.textContent = `KB: ${kbData.sources_count} Sources Loaded`;
+
+        // 1. Render Sources
+        const sourcesEntries = Object.entries(kbData.sources || {});
+        grid.innerHTML = sourcesEntries.map(([sid, s]) => `
+            <div class="kb-card">
+                <div class="kb-card-header">
+                    <span class="citation-id">${sid}</span>
+                    <span class="badge badge-outline">${s.type || 'Official Source'}</span>
+                </div>
+                <div class="kb-title">${s.title}</div>
+                <p style="font-size: 0.8rem; color: #475569; margin-bottom: 0.75rem;">Accessed: ${s.accessed || '2026-10'}</p>
+                ${s.url ? `<a href="${s.url}" target="_blank" class="kb-url">${s.url}</a>` : ''}
             </div>
-            <div class="kb-title">${s.title}</div>
-            <p style="font-size: 0.8rem; color: #475569; margin-bottom: 0.75rem;">${s.desc}</p>
-            <a href="${s.url}" target="_blank" class="kb-url">${s.url}</a>
-        </div>
-    `).join('');
+        `).join('');
+
+        // 2. Render Products & Cartridges
+        const productsGrid = document.getElementById('kb-products-grid');
+        if (productsGrid) {
+            const productEntries = Object.entries(kbData.products || {});
+            productsGrid.innerHTML = productEntries.map(([pkey, p]) => {
+                const isNegative = pkey.includes('PURO_HFS') || pkey.includes('RENO');
+                const isUnverified = pkey.includes('KTF_WIDE');
+                const badgeClass = isNegative ? 'badge-warning' : (isUnverified ? 'badge-outline' : 'badge-success');
+                const badgeLabel = isNegative ? 'Negative Policy / Softener' : (isUnverified ? 'Pending Vendor Confirmation' : 'Verified');
+
+                const factsList = (p.verified_facts || []).map(f => `
+                    <li style="margin-bottom: 0.4rem; font-size: 0.82rem; color: #334155;">
+                        <strong>${f.id}:</strong> ${f.fact}
+                    </li>
+                `).join('');
+
+                const aliasesText = (p.aliases || []).join(', ');
+
+                return `
+                    <div class="kb-card" style="border-top: 3px solid ${isNegative ? '#eab308' : (isUnverified ? '#f97316' : '#0284c7')}">
+                        <div class="kb-card-header">
+                            <span class="citation-id" style="font-size: 0.75rem;">${pkey}</span>
+                            <span class="badge ${badgeClass}">${badgeLabel}</span>
+                        </div>
+                        <div class="kb-title" style="font-size: 0.95rem;">${p.name}</div>
+                        ${aliasesText ? `<div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;"><em>Aliases: ${aliasesText}</em></div>` : ''}
+                        ${p.applicability ? `<div style="font-size: 0.75rem; color: #0369a1; margin-bottom: 0.5rem; background: #f0f9ff; padding: 4px 6px; border-radius: 4px;"><strong>Applicability:</strong> ${p.applicability}</div>` : ''}
+                        ${p.uncertainty ? `<div style="font-size: 0.75rem; color: #b45309; margin-bottom: 0.5rem; background: #fffbeb; padding: 4px 6px; border-radius: 4px;">⚠️ <strong>Uncertainty:</strong> ${p.uncertainty}</div>` : ''}
+                        <ul style="padding-left: 1.2rem; margin: 0.5rem 0;">${factsList}</ul>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 3. Render Guardrails & Negative Rules
+        const rulesList = document.getElementById('kb-rules-list');
+        if (rulesList) {
+            rulesList.innerHTML = (kbData.guardrails || []).map((rule, idx) => `
+                <li style="padding: 0.6rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; color: #1e293b; display: flex; align-items: flex-start; gap: 0.5rem;">
+                    <span style="color: #ef4444; font-weight: bold;">🛡️</span>
+                    <span>${rule}</span>
+                </li>
+            `).join('');
+        }
+
+    } catch (e) {
+        console.error('Failed to render dynamic KB sources:', e);
+    }
 }

@@ -61,6 +61,8 @@ def health():
     else:
         provider_status = "deterministic_mock_mode"
 
+    # Ensure latest knowledge base state is loaded
+    kb.load()
     return {
         "status": "healthy",
         "environment": settings.ENVIRONMENT,
@@ -70,6 +72,22 @@ def health():
         "live_credentials_present": (has_groq_key if settings.LLM_PROVIDER == "groq" else (has_openai_key if settings.LLM_PROVIDER == "openai" else False)),
         "kb_sources_count": len(kb.sources),
         "kb_products_count": len(kb.products)
+    }
+
+@app.get("/api/knowledge-base")
+def get_knowledge_base_data():
+    """Returns the full verified knowledge base structure dynamically."""
+    kb.load()
+    return {
+        "title": kb.data.get("title", "WaterScience Verified Knowledge Base"),
+        "last_researched": kb.data.get("last_researched"),
+        "sources": kb.sources,
+        "products": kb.products,
+        "guardrails": kb.guardrails,
+        "routing_rules": kb.routing_rules,
+        "policy_facts": kb.policy_facts,
+        "sources_count": len(kb.sources),
+        "products_count": len(kb.products)
     }
 
 @app.post("/api/query", response_model=SupportCase)

@@ -149,6 +149,63 @@ class ResponseGenerator:
 
         # 2. Cartridge selection
         if issue_category == "cartridge_selection":
+            # Negative rule: PURO HFS-625 has no replacement cartridge
+            if detected_product == "PURO HFS-625" or "hfs-625" in t or "hfs 625" in t:
+                return (
+                    "Important Notice: The PURO HFS-625 is a self-cleaning health faucet equipped with NeverBlock technology and has "
+                    "NO replacement cartridge [Source: S09]. Please do NOT purchase or recommend PURO HFF replacement cartridges for this model, "
+                    "as they are not compatible. For maintenance, simply wipe or clean the external nozzle faceplate if needed."
+                )
+
+            # Negative rule: RENO Cygnus uses salt regeneration, not cartridges
+            if detected_product in ["RENO Cygnus", "RENO_CYGNUS"] or (any(w in t for w in ["reno", "cygnus"]) and "cartridge" in t):
+                return (
+                    "Thank you for contacting WaterScience. The RENO Cygnus is an ion-exchange water softener that uses softener salt pellets "
+                    "for resin regeneration; it is NOT a replacement-cartridge product [Source: S08, S10]. It does not take filter cartridges. "
+                    "For ongoing operation, only water softener salt refills and periodic service/regeneration are required. Cartridge recommendations "
+                    "do not apply to RENO softeners."
+                )
+
+            # Unverified rule: KTF Wide / FLO-KTF-723 ceramic cartridge mapping
+            if "ktf" in str(detected_product).lower() or "ktf" in t or "flo-ktf-723" in t:
+                return (
+                    "Thank you for reaching out. Please note that the standalone ceramic replacement cartridge mapping for the KTF Wide / FLO-KTF-723 "
+                    "is currently UNVERIFIED and pending vendor confirmation [Source: S07, S10]. While the product includes initial cartridges in the box, "
+                    "our support assistant cannot make a definitive recommendation for standalone replacement cartridges until verified by official vendor documentation. "
+                    "This inquiry has been escalated to our product specialist desk."
+                )
+
+            # VERSA STF-1025
+            if detected_product == "VERSA STF-1025" or "stf-1025" in t or "stf 1025" in t:
+                return (
+                    "Hello! The VERSA STF-1025 shower & tap filter is verified to be compatible specifically with the "
+                    "VERSA-STF-RC-1025-HHC replacement cartridge, which is sold as a pack of 2 [Source: S10, S11]. "
+                    "Standard CLEO or other family cartridges will not fit this unit."
+                )
+
+            # VERSA SCF-725
+            if detected_product == "VERSA SCF-725" or "scf-725" in t or "scf 725" in t:
+                return (
+                    "Hello! The VERSA SCF-725 shower filter is verified to be compatible specifically with the "
+                    "VERSA-SCF-RC-725 replacement cartridge, which comes as a pack of 3 [Source: S10, S11]."
+                )
+
+            # PURO HFF-526-N / PURO HFF-626-N
+            if detected_product in ["PURO HFF-526-N", "PURO HFF-626-N"] or any(w in t for w in ["hff-526", "hff 526", "hff-626", "hff 626"]):
+                return (
+                    "Hello! The PURO HFF-526-N and PURO HFF-626-N filtered health faucets share the official "
+                    "PURO Filtered Health Faucet Replacement Cartridge (Pack of 6) [Source: S10, S12]. "
+                    "Please note that these cartridges are strictly for the HFF filtered series and are not compatible with the PURO HFS-625 (which has no replacement cartridge)."
+                )
+
+            # RIO-MLF-119
+            if detected_product == "RIO-MLF-119" or "mlf-119" in t or "mlf 119" in t or "rio-mlf-119" in t:
+                return (
+                    "Hello! The RIO-MLF-119 mainline filter is explicitly compatible with the RIO-RC-119 replacement cartridge [Source: S10, S13]. "
+                    "Please note that mainline filter cartridge mappings must be kept model-specific; generic 10-inch or 20-inch cartridges are not universally interchangeable "
+                    "across all mainline models without confirming your exact housing."
+                )
+
             if any(w in t for w in ["chemical", "percentage", "zinc", "copper", "kdf"]):
                 return (
                     "Thank you for contacting WaterScience. The CLEO replacement cartridge utilizes KDF technology with proprietary filter media "
@@ -469,6 +526,16 @@ class ResponseGenerator:
         human_escalation_required: bool,
         reason_for_escalation: Optional[str]
     ) -> str:
+        from app.knowledge import get_knowledge_base
+        kb = get_knowledge_base()
+        product_facts = []
+        if detected_product:
+            match = kb.find_product_by_name(detected_product)
+            if match:
+                for vf in match[1].get("verified_facts", []):
+                    product_facts.append(f"- {vf.get('fact')}")
+        facts_summary = "\n".join(product_facts) or "None recorded"
+
         sources_summary = "\n".join([f"- [{s.source_id}] {s.title} ({s.url}): {s.evidence_type}" for s in cited_sources])
         needed_summary = "\n".join([f"- {item}" for item in information_needed]) or "None"
 
@@ -476,11 +543,20 @@ class ResponseGenerator:
             "You are the WaterScience Customer Support AI drafting assistant. "
             "You draft concise, factual, empathetic customer support responses that require mandatory human review.\n"
             "MANDATORY EVIDENCE, CHANNEL, AND SAFETY RULES:\n"
-            "1. Ground every factual claim in the provided sources. Cite sources like [Source: S01].\n"
+            "1. Ground every factual claim in the provided sources and Product Verified Facts. Cite sources like [Source: S01].\n"
             "2. Never promise refunds, immediate replacements, delivery dates, or warranty approval.\n"
             "3. Purchase Channel Isolation: WaterScience website return policies NEVER apply to Amazon, Flipkart, Blinkit, or retail stores. Marketplaces must follow their respective platform return policies.\n"
             "4. Potable Water Safety Invariant: Tap extenders (KTF) and shower filters (CLEO) are non-potable sediment/chlorine conditioning filters and are NEVER certified drinking water purifiers. They do NOT replace an RO (Reverse Osmosis) purifier and do NOT make water potable or safe for direct consumption or baby milk. State clearly that tap/shower filters are not certified drinking water purifiers. When customers inquire about drinking-water purifiers (such as UV RO, alkaline, or copper-charge purifiers), clarify that WaterScience does not manufacture or sell drinking-water RO purifiers and specializes exclusively in non-potable shower and tap conditioning filters (CLEO, KTF). For infant milk formula preparation, explicitly advise that tap/shower filters are non-potable and emphasize that water must always be brought to a rolling boil and cooled according to pediatric safety guidelines [S07]. Never suggest water may become safe to drink after review.\n"
-            "5. Cartridge Non-Interchangeability & Warranty Invariant: Filter cartridges are strictly product- and model-specific. Never state or imply cartridges are interchangeable across different models or categories (e.g. IRIS washing machine cartridge cannot be used in CLEO shower heads; KTF Mini cannot fit KTF Wide ceramic cartridges). Cartridges are consumable replacement parts with specific lifespans (e.g. IRIS-WMF-325: 3-4 months / 60-90 wash cycles [S06]; CLEO: 3-6 months [S02]) and are strictly excluded from the 5-year housing warranty [S03]. Explain that the 5-year warranty applies to the housing against manufacturing defects, not consumable cartridges.\n"
+            "5. Cartridge Non-Interchangeability & Model Specificity Invariant:\n"
+            "   - CRITICAL NEGATIVE RULE: PURO HFS-625 is a self-cleaning faucet with NeverBlock technology and has NO REPLACEMENT CARTRIDGE whatsoever [S09]. You MUST explicitly inform the customer that PURO HFS-625 does NOT have or use replacement cartridges. NEVER claim it has a dedicated cartridge, and do NOT recommend or suggest PURO HFF replacement cartridges for it!\n"
+            "   - CRITICAL NEGATIVE RULE: RENO Cygnus is an ion-exchange water softener that uses softener salt pellets for resin regeneration and is NOT a replacement-cartridge product [S08, S10]. Explicitly inform the customer that it does not take replacement filter cartridges.\n"
+            "   - Filter cartridges for filtering products are strictly product- and model-specific. Never state or imply cartridges are interchangeable across different models or categories.\n"
+            "   - VERSA STF-1025 uses replacement cartridge VERSA-STF-RC-1025-HHC (pack of 2) [S10, S11].\n"
+            "   - VERSA SCF-725 uses replacement cartridge VERSA-SCF-RC-725 (pack of 3) [S10, S11].\n"
+            "   - PURO HFF-526-N and HFF-626-N share the PURO Filtered Health Faucet Replacement Cartridge (Pack of 6) [S10, S12].\n"
+            "   - RIO-MLF-119 uses RIO-RC-119 [S10, S13]. Mainline cartridges must remain model-specific rather than universal 10-inch/20-inch replacements.\n"
+            "   - KTF Wide / FLO-KTF-723 ceramic replacement cartridge mapping is unverified and pending vendor confirmation; avoid definitive recommendations.\n"
+            "   - Cartridges are consumable replacement parts with specific lifespans (e.g. IRIS-WMF-325: 3-4 months / 60-90 wash cycles [S06]; CLEO: 3-6 months [S02]) and are strictly excluded from the 5-year housing warranty [S03].\n"
             "6. DIY Installation Invariant: WaterScience shower and tap filters are standard DIY (Do-It-Yourself) products designed for self-installation using provided adapters. WaterScience does NOT provide free or paid doorstep plumber installation visits.\n"
             "7. Domestic Shipping Invariant: WaterScience website orders ship from the Bengaluru fulfillment center exclusively within India (S05: dispatched in 2-3 business days, delivered in 4-7 days). WaterScience does NOT offer international shipping (e.g. to Dubai, UAE, USA).\n"
             "8. Softener, TDS, Low Flow & Industrial Sizing Invariant: Water softeners (RENO Cygnus) and filters condition hardness minerals to prevent scaling; they DO NOT reduce Total Dissolved Solids (TDS). They will NOT drop TDS from 1200 to 50 ppm. Only Reverse Osmosis (RO) drinking purifiers reduce TDS. Never make unconditional assertions that a product is authentic, genuine, or counterfeit-free without inspecting verification evidence. Explain that an unchanged TDS reading does not by itself prove a product is defective or counterfeit, and request purchase channel, order ID, and invoice if authenticity verification is required. For reduced water flow or pressure drops on CLEO filters, always instruct the official Reverse Flush procedure (turning the cartridge upside down under running water to dislodge sediment blockage) as the primary troubleshooting step [S02]. WaterScience whole-home softeners (RENO Cygnus) are designed for residential/domestic applications [S08]; large-scale industrial manufacturing applications (such as 100,000 L/hr textile effluent) require custom commercial engineering and escalation to our commercial consultation team.\n"
@@ -498,9 +574,10 @@ class ResponseGenerator:
             f"Issue Category: {issue_category}\n"
             f"Purchase Channel: {purchase_channel}\n"
             f"Human Escalation Required: {human_escalation_required} (Reason: {reason_for_escalation})\n"
+            f"Product Verified Facts from Knowledge Base:\n{facts_summary}\n"
             f"Information Still Needed:\n{needed_summary}\n"
             f"Applicable Verified Sources:\n{sources_summary}\n\n"
-            "Draft a concise, factual customer response following all rules."
+            "Draft a concise, factual customer response strictly adhering to the Product Verified Facts and all rules."
         )
 
         response = client.chat.completions.create(

@@ -63,20 +63,41 @@ class KnowledgeBase:
     def find_product_by_name(self, text: str) -> Optional[tuple[str, Dict[str, Any]]]:
         text_lower = text.lower()
         # Specific model matching first
+        if "stf-1025" in text_lower or "stf 1025" in text_lower:
+            return "VERSA_STF_1025", self.products["VERSA_STF_1025"]
+        if "scf-725" in text_lower or "scf 725" in text_lower:
+            return "VERSA_SCF_725", self.products["VERSA_SCF_725"]
+        if "hff-526" in text_lower or "hff 526" in text_lower:
+            return "PURO_HFF_526_N", self.products["PURO_HFF_526_N"]
+        if "hff-626" in text_lower or "hff 626" in text_lower:
+            return "PURO_HFF_626_N", self.products["PURO_HFF_626_N"]
+        if "mlf-119" in text_lower or "mlf 119" in text_lower:
+            return "RIO_MLF_119", self.products["RIO_MLF_119"]
         if "sfu-717" in text_lower or "sfu 717" in text_lower:
             return "CLEO_SFU_717", self.products["CLEO_SFU_717"]
         if "iris" in text_lower or "wmf-325" in text_lower or "wmf 325" in text_lower or "washing machine" in text_lower:
             return "IRIS_WMF_325", self.products["IRIS_WMF_325"]
-        if "puro" in text_lower or "hfs-625" in text_lower or "health faucet" in text_lower:
+        if "hfs-625" in text_lower or "hfs 625" in text_lower:
+            return "PURO_HFS_625", self.products["PURO_HFS_625"]
+        if "puro" in text_lower or "health faucet" in text_lower:
             return "PURO_HFS_625", self.products["PURO_HFS_625"]
         if "reno" in text_lower or "cygnus" in text_lower or "softener" in text_lower:
             return "RENO_CYGNUS", self.products["RENO_CYGNUS"]
         if "ktf" in text_lower or "kitchen tap extender" in text_lower or "ceramic cartridge" in text_lower:
             return "KTF_WIDE_CERAMIC", self.products["KTF_WIDE_CERAMIC"]
-        if "cleo" in text_lower and ("cartridge" in text_lower or "replacement" in text_lower or "refill" in text_lower):
+        if ("cleo" in text_lower and ("cartridge" in text_lower or "replacement" in text_lower or "refill" in text_lower)) or "cleo-rc" in text_lower or "sfc-uw" in text_lower:
             return "CLEO_REPLACEMENT_CARTRIDGE", self.products["CLEO_REPLACEMENT_CARTRIDGE"]
         if "cleo" in text_lower:
             return "CLEO_SFU_717", self.products["CLEO_SFU_717"]
+
+        # Dynamic search by alias or key in self.products
+        for pkey, pdata in self.products.items():
+            if pkey.lower() in text_lower:
+                return pkey, pdata
+            for alias in pdata.get("aliases", []):
+                if alias.lower() in text_lower:
+                    return pkey, pdata
+
         return None
 
 # Singleton accessor
