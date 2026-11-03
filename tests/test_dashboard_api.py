@@ -122,3 +122,4 @@ def test_escalation_ticket_lifecycle_actions():
         assert rec.status == "resolved"
         assert rec.assigned_to == "agent_rajesh"
         assert rec.resolved_at is not None
+

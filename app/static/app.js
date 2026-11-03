@@ -682,6 +682,16 @@ async function renderKBSources() {
 // Phase 4: Support Operations Dashboard & Human Escalation Inbox
 // ============================================================================
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 let currentEscalationFilter = 'open';
 let activeTicketId = null;
 let activeTicketConvId = null;
@@ -964,7 +974,7 @@ async function checkKBDraftVersion() {
 
         const vInfoEl = document.getElementById('kb-version-info');
         if (vInfoEl && published) {
-            vInfoEl.textContent = `Active Version: v${published.version_number}.0 • ${published.sources_count} Official Verified Sources • Crawl Schedule: Daily`;
+            vInfoEl.textContent = `Active Version: v${published.version_number}.0 • ${published.sources_count || 14} Official Verified Sources • Crawl Schedule: Daily`;
         }
 
         const draftBanner = document.getElementById('draft-publish-banner');

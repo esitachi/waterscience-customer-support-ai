@@ -180,3 +180,4 @@ In accordance with strict preservation instructions:
 5. Review the detected changes and click **✓ Publish to Live AI**.
 6. If an erroneous update is ever published, click **↩ Rollback** to revert to the previous version with 1 click.
 7. To register a new official page, click **➕ Add Website URL**, provide the URL and title, and submit.
+
