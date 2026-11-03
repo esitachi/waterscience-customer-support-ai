@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -22,7 +23,8 @@ from app.models import (
     KnowledgeVersionSummary,
     PublishVersionRequest,
     RollbackVersionRequest,
-    SyncScheduleConfig
+    SyncScheduleConfig,
+    DashboardControlsRequest
 )
 from app.engine import get_support_engine
 from app.knowledge import get_knowledge_base
@@ -630,3 +632,84 @@ def update_sync_schedule(config: SyncScheduleConfig):
     global _sync_schedule_state
     _sync_schedule_state.frequency = config.frequency
     return _sync_schedule_state
+
+# -----------------------------------------------------------------------------
+# Phase 4: Support Operations Dashboard & Business Controls APIs
+# -----------------------------------------------------------------------------
+
+_allowed_auto_categories = [
+    "compatibility",
+    "cartridge_selection",
+    "delivery_tracking",
+    "washing_machine_compatibility",
+    "cartridge_life"
+]
+
+@app.get("/api/v2/dashboard/metrics")
+def get_dashboard_metrics():
+    """
+    Returns high-level operational KPIs for the Support Operations Dashboard:
+    - Total incoming messages
+    - Active conversations
+    - Messages awaiting processing
+    - Automatically resolved conversations
+    - Escalated conversations
+    - Conversations awaiting customer replies
+    - Failed processing jobs
+    - Retrying jobs
+    - Average response time
+    - Resolution rate (%)
+    - Emergency automation pause status
+    """
+    queue_mgr = get_queue_manager()
+    stats = queue_mgr.get_stats()
+
+    with SessionLocal() as db:
+        total_msgs = db.query(MessageRecord).filter_by(role="customer").count()
+        active_convs = db.query(ConversationRecord).filter(
+            ConversationRecord.status.in_(["active", "awaiting_customer_reply"])
+        ).count()
+        auto_resolved_convs = db.query(ConversationRecord).filter_by(status="auto_resolved").count()
+        escalated_convs = db.query(ConversationRecord).filter_by(status="escalated_to_human").count()
+        awaiting_reply_convs = db.query(ConversationRecord).filter_by(status="awaiting_customer_reply").count()
+        failed_jobs = db.query(ProcessingJobRecord).filter_by(status="dead_letter").count() + stats["dead_letter_queue_count"]
+        open_tickets = db.query(TicketRecord).filter_by(status="open").count()
+
+        total_closed_or_resolved = auto_resolved_convs + escalated_convs
+        resolution_rate = round((auto_resolved_convs / total_closed_or_resolved * 100), 1) if total_closed_or_resolved > 0 else 100.0
+
+        return {
+            "total_incoming_messages": total_msgs,
+            "active_conversations": active_convs,
+            "messages_awaiting_processing": stats["queue_depth"],
+            "automatically_resolved_conversations": auto_resolved_convs,
+            "escalated_conversations": escalated_convs,
+            "conversations_awaiting_customer_replies": awaiting_reply_convs,
+            "failed_processing_jobs": failed_jobs,
+            "retrying_jobs": stats["total_retries"],
+            "average_response_time_ms": stats["average_latency_ms"],
+            "p95_latency_ms": stats["p95_latency_ms"],
+            "resolution_rate_percent": resolution_rate,
+            "open_escalation_tickets": open_tickets,
+            "active_workers": stats["active_workers"],
+            "configured_concurrency": stats["configured_concurrency"],
+            "emergency_pause_active": settings.EMERGENCY_AUTOMATION_PAUSED,
+            "allowed_auto_categories": _allowed_auto_categories
+        }
+
+@app.post("/api/v2/dashboard/controls")
+def update_dashboard_controls(req: DashboardControlsRequest):
+    """
+    Updates operational controls: emergency pause and auto-resolution categories.
+    """
+    global _allowed_auto_categories
+    if req.emergency_pause is not None:
+        settings.EMERGENCY_AUTOMATION_PAUSED = req.emergency_pause
+    if req.allowed_categories is not None:
+        _allowed_auto_categories = req.allowed_categories
+
+    return {
+        "status": "success",
+        "emergency_pause_active": settings.EMERGENCY_AUTOMATION_PAUSED,
+        "allowed_auto_categories": _allowed_auto_categories
+    }

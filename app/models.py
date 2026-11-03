@@ -197,3 +197,7 @@ class SyncScheduleConfig(BaseModel):
     frequency: str = "manual"  # manual, daily, weekly
     last_run_at: Optional[str] = None
     next_run_at: Optional[str] = None
+
+class DashboardControlsRequest(BaseModel):
+    emergency_pause: Optional[bool] = None
+    allowed_categories: Optional[List[str]] = None
