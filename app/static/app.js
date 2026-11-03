@@ -898,6 +898,34 @@ async function quickResolveTicket(ticketId) {
     }
 }
 
+async function triggerBulkResolve() {
+    if (!confirm('Resolve all open escalation tickets with AI recommended guidance?')) return;
+    try {
+        const res = await fetch('/api/v2/dashboard/bulk-action?action=resolve_all_open', { method: 'POST' });
+        if (res.ok) {
+            const data = await res.json();
+            showToast(`Bulk resolved ${data.affected_tickets} open tickets.`);
+            await loadOperationsDashboard();
+        }
+    } catch (e) {
+        alert('Bulk resolve failed: ' + e.message);
+    }
+}
+
+async function triggerClearSimulation() {
+    if (!confirm('Clear all synthetic simulation test data from the dashboard?')) return;
+    try {
+        const res = await fetch('/api/v2/dashboard/bulk-action?action=clear_simulation_data', { method: 'POST' });
+        if (res.ok) {
+            const data = await res.json();
+            showToast(`Cleared ${data.cleared_messages} simulation messages and ${data.cleared_tickets} test tickets.`);
+            await loadOperationsDashboard();
+        }
+    } catch (e) {
+        alert('Clear failed: ' + e.message);
+    }
+}
+
 async function viewTicketContext(conversationId, ticketId) {
     activeTicketId = ticketId;
     activeTicketConvId = conversationId;

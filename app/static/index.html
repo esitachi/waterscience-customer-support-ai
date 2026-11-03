@@ -402,11 +402,13 @@
                         <h2>Human Escalation Inbox (Level 3 Exceptions)</h2>
                         <p class="section-desc">Hazardous complaints, warranty exceptions, missing evidence, or repeated loop issues requiring support agent intervention.</p>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                         <button class="btn btn-outline" onclick="loadEscalationTickets('all')">All</button>
                         <button class="btn btn-outline active-subtab" id="filter-open-btn" onclick="loadEscalationTickets('open')">Open</button>
                         <button class="btn btn-outline" id="filter-assigned-btn" onclick="loadEscalationTickets('assigned')">Assigned</button>
                         <button class="btn btn-outline" id="filter-resolved-btn" onclick="loadEscalationTickets('resolved')">Resolved</button>
+                        <button class="btn btn-outline" style="border-color: #10b981; color: #065f46;" onclick="triggerBulkResolve()">⚡ Bulk Resolve</button>
+                        <button class="btn btn-outline" style="border-color: #94a3b8; color: #475569;" onclick="triggerClearSimulation()">🧹 Reset Test Data</button>
                         <button class="btn btn-primary" onclick="loadEscalationTickets()">🔄 Refresh</button>
                     </div>
                 </div>

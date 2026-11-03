@@ -714,6 +714,32 @@ def update_dashboard_controls(req: DashboardControlsRequest):
         "allowed_auto_categories": _allowed_auto_categories
     }
 
+@app.post("/api/v2/dashboard/bulk-action")
+def execute_bulk_action(action: str = "resolve_all_open"):
+    """
+    Automates bulk resolution for support operations:
+    - 'resolve_all_open': Automatically marks open escalation tickets as resolved with AI guidance.
+    - 'clear_simulation_data': Clears synthetic load-test messages and tickets.
+    """
+    with SessionLocal() as db:
+        if action == "resolve_all_open":
+            count = db.query(TicketRecord).filter_by(status="open").update({
+                TicketRecord.status: "resolved",
+                TicketRecord.assigned_to: "bulk_resolution_agent",
+                TicketRecord.resolved_at: datetime.now(timezone.utc)
+            })
+            db.commit()
+            return {"status": "success", "action": action, "affected_tickets": count}
+        elif action == "clear_simulation_data":
+            t_count = db.query(TicketRecord).filter(TicketRecord.ticket_id.like("TCK-%")).delete(synchronize_session=False)
+            m_count = db.query(MessageRecord).filter(MessageRecord.message_id.like("SIM-%")).delete(synchronize_session=False)
+            c_count = db.query(ConversationRecord).filter(ConversationRecord.conversation_id.like("SIMCONV-%")).delete(synchronize_session=False)
+            j_count = db.query(ProcessingJobRecord).filter(ProcessingJobRecord.job_id.like("JOB-SIM-%")).delete(synchronize_session=False)
+            db.commit()
+            return {"status": "success", "action": action, "cleared_messages": m_count, "cleared_tickets": t_count}
+        else:
+            raise HTTPException(status_code=400, detail="Unknown action")
+
 # -----------------------------------------------------------------------------
 # Phase 5: Scale and Performance Simulator APIs
 # -----------------------------------------------------------------------------
