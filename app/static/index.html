@@ -618,21 +618,34 @@
 
     <!-- Modal for Viewing Escalation Conversation Context -->
     <div class="modal" id="ticket-conv-modal">
-        <div class="modal-content" style="max-width: 650px;">
+        <div class="modal-content" style="max-width: 680px;">
             <div class="modal-header">
                 <h3 id="ticket-conv-title">Escalation Conversation Thread</h3>
                 <button class="close-btn" onclick="closeTicketModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="ticket-conv-messages" style="max-height: 350px; overflow-y: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div id="ticket-conv-messages" style="max-height: 280px; overflow-y: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
                     <!-- Injected messages -->
                 </div>
-                <div style="margin-top: 1rem; border-top: 1px solid #E2EFF3; padding-top: 1rem;">
-                    <label for="ticket-reply-text"><strong>Send Agent Response / Resolution Note:</strong></label>
-                    <textarea id="ticket-reply-text" class="form-control" rows="3" placeholder="Type resolution or message to customer..."></textarea>
+
+                <!-- AI Resolution Guidance Box -->
+                <div id="ticket-ai-guidance" style="display: none; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                        <span style="font-size: 0.78rem; font-weight: 700; color: #166534;">🤖 AI Recommended Resolution (Pre-Generated Draft)</span>
+                        <span id="ticket-ai-priority" class="badge badge-warning" style="font-size: 0.7rem;">Normal</span>
+                    </div>
+                    <div id="ticket-ai-reason" style="font-size: 0.75rem; color: #15803D; margin-bottom: 0.35rem;"></div>
+                    <div style="font-size: 0.72rem; color: #4b5563;">
+                        💡 <em>The AI response below is pre-filled from verified WaterScience policies. You can review, make adjustments, and click <strong>"⚡ Approve & Resolve Ticket"</strong>.</em>
+                    </div>
+                </div>
+
+                <div style="margin-top: 0.75rem; border-top: 1px solid #E2EFF3; padding-top: 0.75rem;">
+                    <label for="ticket-reply-text"><strong>Send Agent Response / Resolution Note (Pre-filled by AI):</strong></label>
+                    <textarea id="ticket-reply-text" class="form-control" rows="5" placeholder="Type resolution or message to customer..."></textarea>
                     <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.75rem;">
                         <button class="btn btn-outline" onclick="closeTicketModal()">Close Window</button>
-                        <button class="btn btn-success" id="btn-resolve-ticket" onclick="resolveCurrentTicket()">Resolve Ticket</button>
+                        <button class="btn btn-success" id="btn-resolve-ticket" onclick="resolveCurrentTicket()">⚡ Approve & Resolve Ticket</button>
                     </div>
                 </div>
             </div>
@@ -642,6 +655,6 @@
     <!-- Toast Notification for clean feedback -->
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="/static/app.js?v=3.1"></script>
+    <script src="/static/app.js?v=3.2"></script>
 </body>
 </html>

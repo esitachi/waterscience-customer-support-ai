@@ -155,6 +155,7 @@ class TicketSummary(BaseModel):
     escalation_reason: Optional[str] = None
     assigned_to: Optional[str] = None
     customer_message: Optional[str] = None
+    ai_draft: Optional[str] = None
     recommended_action: Optional[str] = None
     created_at: str
     resolved_at: Optional[str] = None

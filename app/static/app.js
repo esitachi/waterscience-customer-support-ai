@@ -933,10 +933,17 @@ async function viewTicketContext(conversationId, ticketId) {
     const modal = document.getElementById('ticket-conv-modal');
     const container = document.getElementById('ticket-conv-messages');
     const title = document.getElementById('ticket-conv-title');
+    const replyBox = document.getElementById('ticket-reply-text');
+    const aiGuidance = document.getElementById('ticket-ai-guidance');
+    const aiReason = document.getElementById('ticket-ai-reason');
+    const aiPriority = document.getElementById('ticket-ai-priority');
+
     if (!modal || !container) return;
 
     if (title) title.textContent = `Escalation Thread: ${ticketId} (Conversation: ${conversationId})`;
     container.innerHTML = '<div style="text-align: center; color: #64748b;">Loading conversation history...</div>';
+    if (replyBox) replyBox.value = '';
+    if (aiGuidance) aiGuidance.style.display = 'none';
     modal.classList.add('active');
 
     try {
@@ -956,6 +963,24 @@ async function viewTicketContext(conversationId, ticketId) {
                 </div>
             `;
         }).join('');
+
+        // Find ticket info and pre-populate AI draft
+        const ticket = (data.tickets || []).find(t => t.ticket_id === ticketId) || (data.tickets || [])[0];
+        if (ticket) {
+            if (aiGuidance && ticket.ai_draft) {
+                aiGuidance.style.display = 'block';
+                if (aiReason) {
+                    aiReason.innerHTML = `<strong>Escalation Trigger:</strong> ${escapeHtml(ticket.escalation_reason || 'Human review requested')}`;
+                }
+                if (aiPriority) {
+                    aiPriority.textContent = (ticket.priority || 'NORMAL').toUpperCase();
+                    aiPriority.className = ticket.priority === 'urgent' ? 'badge badge-danger' : 'badge badge-warning';
+                }
+            }
+            if (replyBox && ticket.ai_draft) {
+                replyBox.value = ticket.ai_draft;
+            }
+        }
 
     } catch (e) {
         container.innerHTML = `<div style="color: #ef4444;">Error loading conversation: ${e.message}</div>`;

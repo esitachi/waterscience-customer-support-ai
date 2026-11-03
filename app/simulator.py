@@ -268,7 +268,7 @@ class ScaleSimulatorEngine:
                 item = random.choice(SIMULATION_CORPUS)
                 msg_id = f"SIM-{uuid.uuid4().hex[:10]}"
                 cust_id = f"SIMCUST-{random.randint(1000, 9999)}"
-                conv_id = f"SIMCONV-{random.randint(100, 999)}"
+                conv_id = f"SIMCONV-{uuid.uuid4().hex[:8].upper()}"
 
                 req_msg = IngestMessageRequest(
                     channel=item["channel"],

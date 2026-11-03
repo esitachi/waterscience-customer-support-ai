@@ -469,7 +469,12 @@ def get_conversation_history(conversation_id: str):
                     "status": t.status,
                     "priority": t.priority,
                     "category": t.category,
-                    "escalation_reason": t.escalation_reason
+                    "escalation_reason": t.escalation_reason,
+                    "customer_message": t.customer_message,
+                    "ai_draft": t.ai_draft,
+                    "recommended_action": t.recommended_action,
+                    "assigned_to": t.assigned_to,
+                    "created_at": t.created_at.isoformat() if t.created_at else ""
                 }
                 for t in tickets
             ]
@@ -495,6 +500,7 @@ def list_tickets(status_filter: Optional[str] = None):
                 escalation_reason=t.escalation_reason,
                 assigned_to=t.assigned_to,
                 customer_message=t.customer_message,
+                ai_draft=t.ai_draft,
                 recommended_action=t.recommended_action,
                 created_at=t.created_at.isoformat() if t.created_at else "",
                 resolved_at=t.resolved_at.isoformat() if t.resolved_at else None
