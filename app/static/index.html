@@ -36,11 +36,17 @@
             <button class="tab-btn active" id="tab-live-btn" onclick="switchTab('live')">
                 <span class="tab-icon">💬</span> Live Query Console
             </button>
-            <button class="tab-btn" id="tab-synthetic-btn" onclick="switchTab('synthetic')">
-                <span class="tab-icon">🧪</span> Synthetic Test Benchmark (20 Cases)
+            <button class="tab-btn" id="tab-operations-btn" onclick="switchTab('operations')">
+                <span class="tab-icon">📊</span> Support Operations
             </button>
             <button class="tab-btn" id="tab-kb-btn" onclick="switchTab('kb')">
                 <span class="tab-icon">📚</span> Evidence & Knowledge Base
+            </button>
+            <button class="tab-btn" id="tab-simulator-btn" onclick="switchTab('simulator')">
+                <span class="tab-icon">⚡</span> Scale & Simulator
+            </button>
+            <button class="tab-btn" id="tab-synthetic-btn" onclick="switchTab('synthetic')">
+                <span class="tab-icon">🧪</span> Synthetic Benchmark (20 Cases)
             </button>
         </nav>
 
@@ -265,6 +271,33 @@
                 </div>
                 <p class="section-desc">All facts, cartridge compatibility mappings, and policy rules are strictly derived from official WaterScience product and policy pages. Amazon India marketplace review and Q&A content was inaccessible and is intentionally excluded to prevent hallucination.</p>
                 
+                <!-- Knowledge Sync & Version Bar -->
+                <div class="kb-sync-banner" style="display: flex; justify-content: space-between; align-items: center; background: #F0FAFC; border: 1px solid #BCE3EB; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <div style="font-weight: 700; color: #006D82; font-size: 1rem;">Official WaterScience Knowledge Sync Engine</div>
+                        <div style="font-size: 0.85rem; color: #475569;" id="kb-version-info">Active Version: v1.0 • 14 Official Verified Sources • Automated Hash Sync</div>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="btn btn-outline" onclick="openAddSourceModal()">➕ Add Website URL</button>
+                        <button class="btn btn-primary" id="btn-sync-kb" onclick="triggerKBCrawl()">🔄 Update Knowledge Base</button>
+                    </div>
+                </div>
+
+                <!-- Draft Version Publication Banner (Shown if a draft version exists) -->
+                <div id="draft-publish-banner" style="display: none; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span class="badge badge-warning" style="margin-right: 0.5rem;">Draft Version Pending</span>
+                            <strong id="draft-banner-title">Version 2.0 (Draft) ready for publication</strong>
+                            <div style="font-size: 0.85rem; color: #92400E;" id="draft-banner-desc">Changes detected across sources. Review changes before publishing.</div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-success" id="btn-publish-draft" onclick="publishStagedDraft()">✓ Publish to Live AI</button>
+                            <button class="btn btn-outline" id="btn-rollback-draft" onclick="rollbackDraft()">↩ Rollback</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Sub-navigation for KB View -->
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem;">
                     <button class="btn btn-outline active-subtab" id="subtab-sources-btn" onclick="switchKBSubTab('sources')">🔗 Verified Sources (<span id="count-sources">0</span>)</button>
@@ -297,6 +330,243 @@
                 </div>
             </div>
         </section>
+
+        <!-- Tab 4: Support Operations Dashboard -->
+        <section id="tab-operations" class="tab-content">
+            <!-- Operational KPI Cards Grid -->
+            <div class="benchmark-summary-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
+                <div class="summary-metric">
+                    <span class="metric-num" id="ops-total-msgs">0</span>
+                    <span class="metric-label">Total Incoming Messages</span>
+                    <span style="font-size: 0.75rem; color: #64748b;" id="ops-active-convs">0 Active Convs</span>
+                </div>
+                <div class="summary-metric success">
+                    <span class="metric-num" id="ops-res-rate">100%</span>
+                    <span class="metric-label">Auto-Resolution Rate</span>
+                    <span style="font-size: 0.75rem; color: #065F46;" id="ops-auto-resolved">0 Resolved</span>
+                </div>
+                <div class="summary-metric danger">
+                    <span class="metric-num" id="ops-open-tickets">0</span>
+                    <span class="metric-label">Open Escalations</span>
+                    <span style="font-size: 0.75rem; color: #991B1B;" id="ops-awaiting-reply">0 Awaiting Reply</span>
+                </div>
+                <div class="summary-metric info">
+                    <span class="metric-num" id="ops-queue-depth">0</span>
+                    <span class="metric-label">Queue Depth</span>
+                    <span style="font-size: 0.75rem; color: #0284C7;" id="ops-failed-jobs">0 Failed DLQ</span>
+                </div>
+                <div class="summary-metric">
+                    <span class="metric-num" id="ops-latency">0ms</span>
+                    <span class="metric-label">Avg / p95 Latency</span>
+                    <span style="font-size: 0.75rem; color: #64748b;" id="ops-p95-latency">p95: 0ms</span>
+                </div>
+                <div class="summary-metric">
+                    <span class="metric-num" id="ops-workers">0 / 4</span>
+                    <span class="metric-label">Worker Pool</span>
+                    <span style="font-size: 0.75rem; color: #64748b;">Active / Concurrency</span>
+                </div>
+            </div>
+
+            <!-- Emergency Pause & Business Category Controls Card -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <div>
+                        <h2>Operational & Business Controls</h2>
+                        <p class="section-desc">Manage autonomous behavior without editing configuration, code, or databases.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <span class="badge badge-success" id="pause-status-badge">🟢 Automation Running</span>
+                        <button class="btn btn-outline" id="btn-toggle-pause" onclick="toggleEmergencyPause()">
+                            🛑 Emergency Pause
+                        </button>
+                    </div>
+                </div>
+
+                <div style="padding: 1rem 0;">
+                    <h4 style="font-size: 0.95rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">Permitted Autonomous Resolution Categories</h4>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Uncheck any category to immediately route matching incoming customer queries to human escalation.</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;" id="category-toggles">
+                        <label class="btn btn-outline" style="cursor: pointer;"><input type="checkbox" id="cat-compatibility" checked onchange="saveCategoryControls()"> Tap & Thread Compatibility</label>
+                        <label class="btn btn-outline" style="cursor: pointer;"><input type="checkbox" id="cat-cartridge_selection" checked onchange="saveCategoryControls()"> Cartridge Selection & SKUs</label>
+                        <label class="btn btn-outline" style="cursor: pointer;"><input type="checkbox" id="cat-delivery_tracking" checked onchange="saveCategoryControls()"> Delivery & Tracking Inquiries</label>
+                        <label class="btn btn-outline" style="cursor: pointer;"><input type="checkbox" id="cat-washing_machine_compatibility" checked onchange="saveCategoryControls()"> Washing Machine Adapters</label>
+                        <label class="btn btn-outline" style="cursor: pointer;"><input type="checkbox" id="cat-cartridge_life" checked onchange="saveCategoryControls()"> Cartridge Lifespan Guidance</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Human Escalation Inbox Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Human Escalation Inbox (Level 3 Exceptions)</h2>
+                        <p class="section-desc">Hazardous complaints, warranty exceptions, missing evidence, or repeated loop issues requiring support agent intervention.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" onclick="loadEscalationTickets('all')">All</button>
+                        <button class="btn btn-outline active-subtab" id="filter-open-btn" onclick="loadEscalationTickets('open')">Open</button>
+                        <button class="btn btn-outline" id="filter-assigned-btn" onclick="loadEscalationTickets('assigned')">Assigned</button>
+                        <button class="btn btn-outline" id="filter-resolved-btn" onclick="loadEscalationTickets('resolved')">Resolved</button>
+                        <button class="btn btn-primary" onclick="loadEscalationTickets()">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="benchmark-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Priority</th>
+                                <th>Category</th>
+                                <th>Customer Message</th>
+                                <th>Escalation Reason</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickets-table-body">
+                            <tr>
+                                <td colspan="8" class="text-center">Loading escalation tickets...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 5: Scale & Performance Center -->
+        <section id="tab-simulator" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Scale & Performance Center (High-Throughput Load Simulator)</h2>
+                        <p class="section-desc">Simulate realistic high-volume traffic (100 to 5,000 messages) across multiple traffic profiles and verify the autonomous support platform meets all production scaling criteria.</p>
+                    </div>
+                    <span class="step-badge" id="sim-status-badge">Simulator Idle</span>
+                </div>
+
+                <!-- Simulator Controls Form -->
+                <div class="form-row" style="margin-top: 1rem; align-items: flex-end;">
+                    <div class="form-group col">
+                        <label for="sim-volume">Volume Preset:</label>
+                        <select id="sim-volume" class="form-control">
+                            <option value="100">100 Messages (Fast Validation)</option>
+                            <option value="500">500 Messages (Standard Load)</option>
+                            <option value="1000">1,000 Messages (Peak Hour)</option>
+                            <option value="2000" selected>2,000 Messages (Assignment Benchmark)</option>
+                            <option value="5000">5,000 Messages (Stress Test)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col">
+                        <label for="sim-profile">Traffic Profile:</label>
+                        <select id="sim-profile" class="form-control">
+                            <option value="mixed" selected>Mixed (Level 1, Level 2, Level 3)</option>
+                            <option value="steady">Steady Flow (Paced Stream)</option>
+                            <option value="burst">Burst Traffic (High-Volume Spikes)</option>
+                            <option value="spiky">Spiky Traffic (Alternating Surges)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col">
+                        <label for="sim-concurrency">Worker Concurrency:</label>
+                        <select id="sim-concurrency" class="form-control">
+                            <option value="4">4 Workers</option>
+                            <option value="10" selected>10 Workers (Recommended)</option>
+                            <option value="20">20 Workers</option>
+                            <option value="50">50 Workers (High Concurrency)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col submit-col">
+                        <button class="btn btn-primary btn-block" id="btn-start-sim" onclick="startScaleSimulation()">
+                            ⚡ Start Load Test
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress and Telemetry Cards -->
+                <div class="sim-progress-block" id="sim-progress-block" style="display: none; margin-top: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600;" id="sim-progress-label">Processing Load Test...</span>
+                        <span style="font-weight: 700; color: #00A3C4;" id="sim-progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-container" style="height: 12px; background: #E2EFF3; border-radius: 6px; overflow: hidden;">
+                        <div class="progress-bar-fill" id="sim-progress-bar" style="width: 0%; height: 100%; background: #00A3C4; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+
+                <div class="benchmark-summary-grid" style="margin-top: 1.5rem;">
+                    <div class="summary-metric">
+                        <span class="metric-num" id="sim-ingested">0</span>
+                        <span class="metric-label">Ingested Messages</span>
+                    </div>
+                    <div class="summary-metric success">
+                        <span class="metric-num" id="sim-processed">0</span>
+                        <span class="metric-label">Processed Messages</span>
+                    </div>
+                    <div class="summary-metric info">
+                        <span class="metric-num" id="sim-throughput">0 msg/s</span>
+                        <span class="metric-label">Throughput Rate</span>
+                    </div>
+                    <div class="summary-metric">
+                        <span class="metric-num" id="sim-latency-p95">0ms</span>
+                        <span class="metric-label">p95 Latency</span>
+                    </div>
+                    <div class="summary-metric danger">
+                        <span class="metric-num" id="sim-error-rate">0.0%</span>
+                        <span class="metric-label">Error Rate</span>
+                    </div>
+                </div>
+
+                <!-- Target Acceptance Matrix Table -->
+                <div class="card" style="margin-top: 1.5rem; border: 1px solid #E2EFF3;">
+                    <h3 style="font-size: 1rem; color: #0F172A; margin-bottom: 1rem;">Benchmark Acceptance Criteria Verification</h3>
+                    <div class="table-responsive">
+                        <table class="benchmark-table">
+                            <thead>
+                                <tr>
+                                    <th>Criteria</th>
+                                    <th>Target Requirement</th>
+                                    <th>Observed Result</th>
+                                    <th>Pass / Fail Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Message Volume</strong></td>
+                                    <td>2,000+ messages processed</td>
+                                    <td id="target-volume-res">-</td>
+                                    <td id="target-volume-status"><span class="badge badge-outline">Pending Run</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Throughput Rate</strong></td>
+                                    <td>&ge; 50 messages/sec</td>
+                                    <td id="target-throughput-res">-</td>
+                                    <td id="target-throughput-status"><span class="badge badge-outline">Pending Run</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Latency (p95)</strong></td>
+                                    <td>&lt; 2.0s per message</td>
+                                    <td id="target-latency-res">-</td>
+                                    <td id="target-latency-status"><span class="badge badge-outline">Pending Run</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Processing Error Rate</strong></td>
+                                    <td>&lt; 0.5% failure rate</td>
+                                    <td id="target-error-res">-</td>
+                                    <td id="target-error-status"><span class="badge badge-outline">Pending Run</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Message Loss</strong></td>
+                                    <td>0 lost messages (idempotent DB persistence)</td>
+                                    <td id="target-loss-res">-</td>
+                                    <td id="target-loss-status"><span class="badge badge-outline">Pending Run</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Modal for Detailed Case Inspection -->
@@ -308,6 +578,61 @@
             </div>
             <div class="modal-body" id="modal-body">
                 <!-- Details injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding New Website Knowledge Source -->
+    <div class="modal" id="add-source-modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3>➕ Add Official Website Knowledge Source</h3>
+                <button class="close-btn" onclick="closeAddSourceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="new-source-url"><strong>Source URL:</strong></label>
+                    <input type="url" id="new-source-url" class="form-control" placeholder="https://www.waterscience.in/products/..." required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="new-source-title"><strong>Source Title / Description:</strong></label>
+                    <input type="text" id="new-source-title" class="form-control" placeholder="e.g. CLEO Shower Filter Product Page" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="new-source-type"><strong>Source Type:</strong></label>
+                    <select id="new-source-type" class="form-control">
+                        <option value="product_page">Product Page</option>
+                        <option value="policy_page">Policy / Warranty Page</option>
+                        <option value="faq_page">FAQ / Guide</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button class="btn btn-outline" onclick="closeAddSourceModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitAddSource()">Add and Crawl Source</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Viewing Escalation Conversation Context -->
+    <div class="modal" id="ticket-conv-modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 id="ticket-conv-title">Escalation Conversation Thread</h3>
+                <button class="close-btn" onclick="closeTicketModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="ticket-conv-messages" style="max-height: 350px; overflow-y: auto; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <!-- Injected messages -->
+                </div>
+                <div style="margin-top: 1rem; border-top: 1px solid #E2EFF3; padding-top: 1rem;">
+                    <label for="ticket-reply-text"><strong>Send Agent Response / Resolution Note:</strong></label>
+                    <textarea id="ticket-reply-text" class="form-control" rows="3" placeholder="Type resolution or message to customer..."></textarea>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.75rem;">
+                        <button class="btn btn-outline" onclick="closeTicketModal()">Close Window</button>
+                        <button class="btn btn-success" id="btn-resolve-ticket" onclick="resolveCurrentTicket()">Resolve Ticket</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

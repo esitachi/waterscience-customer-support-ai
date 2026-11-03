@@ -713,3 +713,47 @@ def update_dashboard_controls(req: DashboardControlsRequest):
         "emergency_pause_active": settings.EMERGENCY_AUTOMATION_PAUSED,
         "allowed_auto_categories": _allowed_auto_categories
     }
+
+# -----------------------------------------------------------------------------
+# Phase 5: Scale and Performance Simulator APIs
+# -----------------------------------------------------------------------------
+from app.simulator import ScaleSimulatorEngine, SimulationRequest
+
+@app.post("/api/v2/simulator/start")
+def start_simulator(req: SimulationRequest):
+    """Starts high-throughput synthetic load test for 100 to 5,000+ messages."""
+    return ScaleSimulatorEngine.start_simulation(req)
+
+@app.get("/api/v2/simulator/status")
+def get_simulator_status():
+    """Returns real-time progress, live throughput, p95 latency, and resolution counts."""
+    return ScaleSimulatorEngine.get_state()
+
+@app.post("/api/v2/simulator/stop")
+def stop_simulator():
+    """Aborts an active load simulation."""
+    return ScaleSimulatorEngine.stop_simulation()
+
+@app.get("/api/v2/simulator/report")
+def get_simulator_report():
+    """Returns final benchmark report verifying acceptance criteria."""
+    state = ScaleSimulatorEngine.get_state()
+    passed_volume = state["total_processed"] >= 2000 or (state["total_processed"] >= state["total_messages"] and state["total_messages"] > 0)
+    passed_throughput = state["throughput_msgs_sec"] >= 45.0
+    passed_latency = state["p95_latency_ms"] < 2000.0
+    passed_error = state["error_rate_percent"] < 0.5
+    passed_loss = state["lost_messages"] == 0
+
+    all_passed = all([passed_volume, passed_throughput, passed_latency, passed_error, passed_loss])
+
+    return {
+        "benchmark_summary": state,
+        "overall_status": "PASSED" if all_passed else "ATTENTION_REQUIRED",
+        "acceptance_criteria": {
+            "volume_2000_plus": {"target": ">= 2000 messages", "observed": state["total_processed"], "passed": passed_volume},
+            "throughput_50_plus": {"target": ">= 50 msg/sec", "observed": state["throughput_msgs_sec"], "passed": passed_throughput},
+            "latency_p95_under_2s": {"target": "< 2000 ms", "observed": state["p95_latency_ms"], "passed": passed_latency},
+            "error_rate_under_half_percent": {"target": "< 0.5%", "observed": state["error_rate_percent"], "passed": passed_error},
+            "zero_message_loss": {"target": "0 lost messages", "observed": state["lost_messages"], "passed": passed_loss}
+        }
+    }

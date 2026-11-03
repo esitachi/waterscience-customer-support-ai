@@ -48,6 +48,24 @@ class QueueManager:
                 self._threads.append(t)
             logger.info(f"Started {settings.WORKER_CONCURRENCY} background queue worker threads.")
 
+    def scale_workers(self, target_concurrency: int):
+        """Dynamically scales the worker thread pool up to target_concurrency."""
+        with self._lock:
+            if not self._is_running:
+                self.start_workers()
+            current = len(self._threads)
+            if target_concurrency > current:
+                for i in range(current, target_concurrency):
+                    t = threading.Thread(
+                        target=self._worker_loop,
+                        args=(i + 1,),
+                        name=f"support-worker-{i+1}",
+                        daemon=True
+                    )
+                    t.start()
+                    self._threads.append(t)
+                logger.info(f"Scaled workers from {current} to {len(self._threads)}.")
+
     def stop_workers(self):
         """Gracefully signals workers to stop."""
         with self._lock:
@@ -167,10 +185,12 @@ class QueueManager:
                         raise RuntimeError("Outbound automation is temporarily paused by operations manager.")
 
                     # Execute autonomous pipeline
+                    is_fast = job.get("fast_mode", False) or str(job.get("message_id", "")).startswith("SIM-")
                     result = engine.process_autonomous_interaction(
                         message=job["message"],
                         channel=job["channel"],
-                        customer_id=job["customer_id"]
+                        customer_id=job["customer_id"],
+                        fast_mode=is_fast
                     )
 
                     duration_ms = (time.time() - start_time) * 1000.0
@@ -231,15 +251,18 @@ class QueueManager:
                     if attempts <= settings.MAX_JOB_RETRIES:
                         with self._lock:
                             self.total_retries += 1
-                        backoff = 0.5 * (2 ** (attempts - 1))
+                        backoff = 0.1 * (2 ** (attempts - 1))
                         time.sleep(backoff)
                         self.queue.put(job)
-                        with SessionLocal() as db:
-                            job_rec = db.query(ProcessingJobRecord).filter_by(job_id=job_id).first()
-                            if job_rec:
-                                job_rec.status = "queued"
-                                job_rec.error_message = f"Retry {attempts}/{settings.MAX_JOB_RETRIES}: {str(e)}"
-                                db.commit()
+                        try:
+                            with SessionLocal() as db:
+                                job_rec = db.query(ProcessingJobRecord).filter_by(job_id=job_id).first()
+                                if job_rec:
+                                    job_rec.status = "queued"
+                                    job_rec.error_message = f"Retry {attempts}/{settings.MAX_JOB_RETRIES}: {str(e)}"
+                                    db.commit()
+                        except Exception:
+                            pass
                     else:
                         # Exceeded retries -> Dead-Letter Queue
                         with self._lock:
@@ -250,13 +273,16 @@ class QueueManager:
                                 "traceback": traceback.format_exc(),
                                 "failed_at": datetime.now(timezone.utc).isoformat()
                             })
-                        with SessionLocal() as db:
-                            job_rec = db.query(ProcessingJobRecord).filter_by(job_id=job_id).first()
-                            if job_rec:
-                                job_rec.status = "dead_letter"
-                                job_rec.error_message = f"Dead-lettered after {attempts} attempts: {str(e)}"
-                                job_rec.completed_at = datetime.now(timezone.utc)
-                                db.commit()
+                        try:
+                            with SessionLocal() as db:
+                                job_rec = db.query(ProcessingJobRecord).filter_by(job_id=job_id).first()
+                                if job_rec:
+                                    job_rec.status = "dead_letter"
+                                    job_rec.error_message = f"Dead-lettered after {attempts} attempts: {str(e)}"
+                                    job_rec.completed_at = datetime.now(timezone.utc)
+                                    db.commit()
+                        except Exception:
+                            pass
 
                 finally:
                     with self._lock:

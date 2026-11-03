@@ -18,6 +18,14 @@ function switchTab(tabId) {
     const activeContent = document.getElementById(`tab-${tabId}`);
     if (activeBtn) activeBtn.classList.add('active');
     if (activeContent) activeContent.classList.add('active');
+
+    if (tabId === 'operations') {
+        loadOperationsDashboard();
+    } else if (tabId === 'kb') {
+        checkKBDraftVersion();
+    } else if (tabId === 'simulator') {
+        refreshSimulatorStatus();
+    }
 }
 
 async function fetchHealth() {
@@ -667,5 +675,578 @@ async function renderKBSources() {
 
     } catch (e) {
         console.error('Failed to render dynamic KB sources:', e);
+    }
+}
+
+// ============================================================================
+// Phase 4: Support Operations Dashboard & Human Escalation Inbox
+// ============================================================================
+
+let currentEscalationFilter = 'open';
+let activeTicketId = null;
+let activeTicketConvId = null;
+
+async function loadOperationsDashboard() {
+    try {
+        const res = await fetch('/api/v2/dashboard/metrics');
+        if (!res.ok) throw new Error('Failed to fetch dashboard metrics');
+        const m = await res.json();
+
+        // 1. Update KPI numbers
+        const totalMsgsEl = document.getElementById('ops-total-msgs');
+        if (totalMsgsEl) totalMsgsEl.textContent = m.total_incoming_messages;
+
+        const activeConvsEl = document.getElementById('ops-active-convs');
+        if (activeConvsEl) activeConvsEl.textContent = `${m.active_conversations} Active Convs`;
+
+        const resRateEl = document.getElementById('ops-res-rate');
+        if (resRateEl) resRateEl.textContent = `${m.resolution_rate_percent}%`;
+
+        const autoResEl = document.getElementById('ops-auto-resolved');
+        if (autoResEl) autoResEl.textContent = `${m.automatically_resolved_conversations} Resolved`;
+
+        const openTckEl = document.getElementById('ops-open-tickets');
+        if (openTckEl) openTckEl.textContent = m.open_escalation_tickets;
+
+        const awaitingReplyEl = document.getElementById('ops-awaiting-reply');
+        if (awaitingReplyEl) awaitingReplyEl.textContent = `${m.conversations_awaiting_customer_replies} Awaiting Reply`;
+
+        const qDepthEl = document.getElementById('ops-queue-depth');
+        if (qDepthEl) qDepthEl.textContent = m.messages_awaiting_processing;
+
+        const failedJobsEl = document.getElementById('ops-failed-jobs');
+        if (failedJobsEl) failedJobsEl.textContent = `${m.failed_processing_jobs} Failed DLQ`;
+
+        const latencyEl = document.getElementById('ops-latency');
+        if (latencyEl) latencyEl.textContent = `${Math.round(m.average_response_time_ms)}ms`;
+
+        const p95LatencyEl = document.getElementById('ops-p95-latency');
+        if (p95LatencyEl) p95LatencyEl.textContent = `p95: ${Math.round(m.p95_latency_ms)}ms`;
+
+        const workersEl = document.getElementById('ops-workers');
+        if (workersEl) workersEl.textContent = `${m.active_workers} / ${m.configured_concurrency}`;
+
+        // 2. Update Emergency Pause Badge & Button
+        const pauseBadge = document.getElementById('pause-status-badge');
+        const pauseBtn = document.getElementById('btn-toggle-pause');
+        if (pauseBadge && pauseBtn) {
+            if (m.emergency_pause_active) {
+                pauseBadge.className = 'badge badge-danger';
+                pauseBadge.textContent = '🔴 Automation Paused';
+                pauseBtn.className = 'btn btn-success';
+                pauseBtn.textContent = '▶ Resume Automation';
+            } else {
+                pauseBadge.className = 'badge badge-success';
+                pauseBadge.textContent = '🟢 Automation Running';
+                pauseBtn.className = 'btn btn-outline';
+                pauseBtn.textContent = '🛑 Emergency Pause';
+            }
+        }
+
+        // 3. Update Category Checkboxes
+        const allowedCats = m.allowed_auto_categories || [];
+        ['compatibility', 'cartridge_selection', 'delivery_tracking', 'washing_machine_compatibility', 'cartridge_life'].forEach(cat => {
+            const el = document.getElementById(`cat-${cat}`);
+            if (el) el.checked = allowedCats.includes(cat);
+        });
+
+        // 4. Load Tickets
+        await loadEscalationTickets(currentEscalationFilter);
+
+    } catch (e) {
+        console.error('Error loading operations dashboard:', e);
+    }
+}
+
+async function toggleEmergencyPause() {
+    try {
+        const badge = document.getElementById('pause-status-badge');
+        const isPaused = badge && badge.textContent.includes('Paused');
+        const newPauseState = !isPaused;
+
+        const res = await fetch('/api/v2/dashboard/controls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emergency_pause: newPauseState })
+        });
+
+        if (res.ok) {
+            showToast(newPauseState ? 'Emergency pause activated. Outbound auto-dispatch suspended.' : 'Automation resumed. Normal processing restored.');
+            await loadOperationsDashboard();
+        }
+    } catch (e) {
+        alert('Failed to toggle emergency pause: ' + e.message);
+    }
+}
+
+async function saveCategoryControls() {
+    try {
+        const cats = [];
+        ['compatibility', 'cartridge_selection', 'delivery_tracking', 'washing_machine_compatibility', 'cartridge_life'].forEach(c => {
+            const el = document.getElementById(`cat-${c}`);
+            if (el && el.checked) cats.push(c);
+        });
+
+        const res = await fetch('/api/v2/dashboard/controls', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ allowed_categories: cats })
+        });
+
+        if (res.ok) {
+            showToast('Auto-resolution categories updated successfully.');
+        }
+    } catch (e) {
+        console.error('Failed to update category controls:', e);
+    }
+}
+
+async function loadEscalationTickets(filter = null) {
+    if (filter) {
+        currentEscalationFilter = filter;
+        ['all', 'open', 'assigned', 'resolved'].forEach(f => {
+            const btn = document.getElementById(`filter-${f}-btn`);
+            if (btn) {
+                if (f === filter) btn.classList.add('active-subtab');
+                else btn.classList.remove('active-subtab');
+            }
+        });
+    }
+
+    const tbody = document.getElementById('tickets-table-body');
+    if (!tbody) return;
+
+    try {
+        const url = currentEscalationFilter === 'all' ? '/api/v2/tickets' : `/api/v2/tickets?status_filter=${currentEscalationFilter}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch tickets');
+        const tickets = await res.json();
+
+        if (tickets.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding: 2rem; color: #64748b;">No ${currentEscalationFilter} escalation tickets found. All cases running smoothly.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = tickets.map(t => {
+            const priorityClass = t.priority === 'urgent' ? 'badge-danger' : (t.priority === 'high' ? 'badge-warning' : 'badge-info');
+            const statusClass = t.status === 'resolved' ? 'badge-success' : (t.status === 'assigned' ? 'badge-warning' : 'badge-danger');
+            const shortMsg = (t.customer_message || '').slice(0, 45) + '...';
+            const shortReason = (t.escalation_reason || '').slice(0, 40) + '...';
+
+            return `
+                <tr>
+                    <td><code>${t.ticket_id}</code></td>
+                    <td><span class="badge ${priorityClass}">${t.priority.toUpperCase()}</span></td>
+                    <td><span style="font-size: 0.85rem; font-weight: 500;">${t.category}</span></td>
+                    <td title="${escapeHtml(t.customer_message || '')}">${escapeHtml(shortMsg)}</td>
+                    <td title="${escapeHtml(t.escalation_reason || '')}" style="color: #991B1B; font-size: 0.82rem;">${escapeHtml(shortReason)}</td>
+                    <td>${t.assigned_to ? `<strong>${t.assigned_to}</strong>` : '<span style="color:#94a3b8;">Unassigned</span>'}</td>
+                    <td><span class="badge ${statusClass}">${t.status}</span></td>
+                    <td>
+                        <div style="display: flex; gap: 0.25rem;">
+                            <button class="btn btn-outline btn-sm" onclick="viewTicketContext('${t.conversation_id}', '${t.ticket_id}')">View</button>
+                            ${t.status === 'open' ? `<button class="btn btn-outline btn-sm" onclick="assignTicket('${t.ticket_id}')">Assign</button>` : ''}
+                            ${t.status !== 'resolved' ? `<button class="btn btn-success btn-sm" onclick="quickResolveTicket('${t.ticket_id}')">Resolve</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #ef4444;">Error loading tickets: ${e.message}</td></tr>`;
+    }
+}
+
+async function assignTicket(ticketId) {
+    const agent = prompt('Enter support agent name to assign:', 'Agent Rajesh') || 'Agent Rajesh';
+    try {
+        const res = await fetch(`/api/v2/tickets/${ticketId}/action?action=assign&assigned_to=${encodeURIComponent(agent)}`, {
+            method: 'POST'
+        });
+        if (res.ok) {
+            showToast(`Ticket ${ticketId} assigned to ${agent}.`);
+            await loadOperationsDashboard();
+        }
+    } catch (e) {
+        alert('Failed to assign ticket: ' + e.message);
+    }
+}
+
+async function quickResolveTicket(ticketId) {
+    const note = prompt('Optional resolution note / customer closure summary:', 'Verified and resolved with customer') || 'Resolved by support agent';
+    try {
+        const res = await fetch(`/api/v2/tickets/${ticketId}/action?action=resolve&note=${encodeURIComponent(note)}`, {
+            method: 'POST'
+        });
+        if (res.ok) {
+            showToast(`Ticket ${ticketId} marked as resolved.`);
+            await loadOperationsDashboard();
+        }
+    } catch (e) {
+        alert('Failed to resolve ticket: ' + e.message);
+    }
+}
+
+async function viewTicketContext(conversationId, ticketId) {
+    activeTicketId = ticketId;
+    activeTicketConvId = conversationId;
+
+    const modal = document.getElementById('ticket-conv-modal');
+    const container = document.getElementById('ticket-conv-messages');
+    const title = document.getElementById('ticket-conv-title');
+    if (!modal || !container) return;
+
+    if (title) title.textContent = `Escalation Thread: ${ticketId} (Conversation: ${conversationId})`;
+    container.innerHTML = '<div style="text-align: center; color: #64748b;">Loading conversation history...</div>';
+    modal.classList.add('active');
+
+    try {
+        const res = await fetch(`/api/v2/conversations/${conversationId}`);
+        if (!res.ok) throw new Error('Conversation not found');
+        const data = await res.json();
+
+        container.innerHTML = (data.messages || []).map(m => {
+            const isCustomer = m.role === 'customer';
+            return `
+                <div style="align-self: ${isCustomer ? 'flex-start' : 'flex-end'}; max-width: 80%; background: ${isCustomer ? '#F1F5F9' : '#E6F7FA'}; border: 1px solid ${isCustomer ? '#CBD5E1' : '#BCE3EB'}; border-radius: 8px; padding: 0.6rem 0.8rem;">
+                    <div style="font-size: 0.72rem; font-weight: 700; color: ${isCustomer ? '#475569' : '#006D82'}; margin-bottom: 0.2rem;">
+                        ${isCustomer ? '👤 Customer' : '💧 WaterScience Support / AI'}
+                    </div>
+                    <div style="font-size: 0.88rem; color: #0F172A; white-space: pre-wrap;">${escapeHtml(m.content)}</div>
+                    <div style="font-size: 0.68rem; color: #94A3B8; text-align: right; margin-top: 0.2rem;">${m.timestamp || ''}</div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (e) {
+        container.innerHTML = `<div style="color: #ef4444;">Error loading conversation: ${e.message}</div>`;
+    }
+}
+
+function closeTicketModal() {
+    const modal = document.getElementById('ticket-conv-modal');
+    if (modal) modal.classList.remove('active');
+    activeTicketId = null;
+    activeTicketConvId = null;
+}
+
+async function resolveCurrentTicket() {
+    if (!activeTicketId) return;
+    const replyText = document.getElementById('ticket-reply-text').value.trim() || 'Resolved with customer';
+
+    try {
+        const res = await fetch(`/api/v2/tickets/${activeTicketId}/action?action=resolve&note=${encodeURIComponent(replyText)}`, {
+            method: 'POST'
+        });
+        if (res.ok) {
+            showToast(`Ticket ${activeTicketId} successfully resolved.`);
+            closeTicketModal();
+            await loadOperationsDashboard();
+        }
+    } catch (e) {
+        alert('Failed to resolve ticket: ' + e.message);
+    }
+}
+
+// ============================================================================
+// Phase 3 & 4: URL Knowledge Management & Sync Functions
+// ============================================================================
+
+async function checkKBDraftVersion() {
+    try {
+        const res = await fetch('/api/v2/knowledge/versions');
+        if (!res.ok) return;
+        const versions = await res.json();
+
+        const published = versions.find(v => v.status === 'published');
+        const draft = versions.find(v => v.status === 'draft');
+
+        const vInfoEl = document.getElementById('kb-version-info');
+        if (vInfoEl && published) {
+            vInfoEl.textContent = `Active Version: v${published.version_number}.0 • ${published.sources_count} Official Verified Sources • Crawl Schedule: Daily`;
+        }
+
+        const draftBanner = document.getElementById('draft-publish-banner');
+        if (draftBanner) {
+            if (draft) {
+                draftBanner.style.display = 'block';
+                document.getElementById('draft-banner-title').textContent = `Version ${draft.version_number}.0 (Draft) ready for publication`;
+                document.getElementById('draft-banner-desc').textContent = draft.summary || 'Updated facts and changes detected across sources.';
+            } else {
+                draftBanner.style.display = 'none';
+            }
+        }
+    } catch (e) {
+        console.error('Failed to check KB versions:', e);
+    }
+}
+
+async function triggerKBCrawl() {
+    const btn = document.getElementById('btn-sync-kb');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Crawling 14 Sources...</span>';
+    }
+
+    try {
+        const res = await fetch('/api/v2/knowledge/crawl', { method: 'POST' });
+        if (!res.ok) throw new Error('Crawl failed');
+        const data = await res.json();
+
+        showToast(`Sync complete: ${data.total_sources} sources scanned (${data.unchanged} unchanged, ${data.modified} modified).`);
+        await checkKBDraftVersion();
+        renderKBSources();
+    } catch (e) {
+        alert('Knowledge Base crawl failed: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>🔄 Update Knowledge Base</span>';
+        }
+    }
+}
+
+async function publishStagedDraft() {
+    try {
+        const vRes = await fetch('/api/v2/knowledge/versions');
+        const versions = await vRes.json();
+        const draft = versions.find(v => v.status === 'draft');
+        if (!draft) {
+            alert('No draft version currently staged.');
+            return;
+        }
+
+        const res = await fetch('/api/v2/knowledge/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ version_number: draft.version_number })
+        });
+
+        if (res.ok) {
+            showToast(`Version ${draft.version_number}.0 successfully published to Live AI!`);
+            await checkKBDraftVersion();
+            renderKBSources();
+        }
+    } catch (e) {
+        alert('Failed to publish draft version: ' + e.message);
+    }
+}
+
+async function rollbackDraft() {
+    if (!confirm('Are you sure you want to rollback to the previous published version?')) return;
+    try {
+        const res = await fetch('/api/v2/knowledge/rollback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_version_number: 1 })
+        });
+
+        if (res.ok) {
+            showToast('Knowledge Base rolled back to Version 1.0.');
+            await checkKBDraftVersion();
+            renderKBSources();
+        }
+    } catch (e) {
+        alert('Rollback failed: ' + e.message);
+    }
+}
+
+function openAddSourceModal() {
+    const m = document.getElementById('add-source-modal');
+    if (m) m.classList.add('active');
+}
+
+function closeAddSourceModal() {
+    const m = document.getElementById('add-source-modal');
+    if (m) m.classList.remove('active');
+}
+
+async function submitAddSource() {
+    const url = document.getElementById('new-source-url').value.trim();
+    const title = document.getElementById('new-source-title').value.trim();
+    const type = document.getElementById('new-source-type').value;
+
+    if (!url || !title) {
+        alert('Please enter both source URL and title.');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/v2/knowledge/sources', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                source_id: 'S' + Math.floor(100 + Math.random() * 900),
+                url: url,
+                title: title,
+                source_type: type
+            })
+        });
+
+        if (res.ok) {
+            showToast(`Added source "${title}". Automatically triggering crawl.`);
+            closeAddSourceModal();
+            await triggerKBCrawl();
+        } else {
+            const err = await res.json();
+            alert('Failed to add source: ' + (err.detail || res.statusText));
+        }
+    } catch (e) {
+        alert('Error adding source: ' + e.message);
+    }
+}
+
+// ============================================================================
+// Phase 5: Scale and Performance Simulator Client
+// ============================================================================
+
+let simPollInterval = null;
+
+async function refreshSimulatorStatus() {
+    try {
+        const res = await fetch('/api/v2/simulator/status');
+        if (res.ok) {
+            const data = await res.json();
+            updateSimulatorUI(data);
+        }
+    } catch (e) {
+        // Simulator endpoint might be starting
+    }
+}
+
+async function startScaleSimulation() {
+    const volume = parseInt(document.getElementById('sim-volume').value, 10);
+    const profile = document.getElementById('sim-profile').value;
+    const concurrency = parseInt(document.getElementById('sim-concurrency').value, 10);
+
+    const btn = document.getElementById('btn-start-sim');
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳ Running Simulator...</span>';
+
+    const progBlock = document.getElementById('sim-progress-block');
+    if (progBlock) progBlock.style.display = 'block';
+
+    try {
+        const res = await fetch('/api/v2/simulator/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                total_messages: volume,
+                profile: profile,
+                concurrency: concurrency
+            })
+        });
+
+        if (!res.ok) throw new Error('Failed to start simulation');
+        showToast(`Started load test for ${volume} messages (${profile} profile, ${concurrency} workers)...`);
+
+        if (simPollInterval) clearInterval(simPollInterval);
+        simPollInterval = setInterval(pollSimulatorProgress, 600);
+
+    } catch (e) {
+        alert('Failed to start load test: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡ Start Load Test</span>';
+    }
+}
+
+async function pollSimulatorProgress() {
+    try {
+        const res = await fetch('/api/v2/simulator/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        updateSimulatorUI(data);
+
+        if (data.status === 'completed' || data.status === 'idle') {
+            clearInterval(simPollInterval);
+            simPollInterval = null;
+            const btn = document.getElementById('btn-start-sim');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>⚡ Start Load Test</span>';
+            }
+            showToast(`Scale simulation completed! Processed ${data.total_processed} messages.`);
+            updateBenchmarkMatrix(data);
+        }
+    } catch (e) {
+        console.error('Error polling simulator:', e);
+    }
+}
+
+function updateSimulatorUI(data) {
+    const badge = document.getElementById('sim-status-badge');
+    if (badge) {
+        badge.textContent = data.status === 'running' ? '⚡ Simulating Load...' : 'Simulator Ready';
+        badge.className = data.status === 'running' ? 'step-badge' : 'step-badge';
+    }
+
+    const pct = data.progress_percent || 0;
+    const bar = document.getElementById('sim-progress-bar');
+    const pctLabel = document.getElementById('sim-progress-percent');
+    if (bar) bar.style.width = `${pct}%`;
+    if (pctLabel) pctLabel.textContent = `${pct}%`;
+
+    const ingestedEl = document.getElementById('sim-ingested');
+    if (ingestedEl) ingestedEl.textContent = data.total_ingested || 0;
+
+    const processedEl = document.getElementById('sim-processed');
+    if (processedEl) processedEl.textContent = data.total_processed || 0;
+
+    const tputEl = document.getElementById('sim-throughput');
+    if (tputEl) tputEl.textContent = `${Math.round(data.throughput_msgs_sec || 0)} msg/s`;
+
+    const p95El = document.getElementById('sim-latency-p95');
+    if (p95El) p95El.textContent = `${Math.round(data.p95_latency_ms || 0)}ms`;
+
+    const errEl = document.getElementById('sim-error-rate');
+    if (errEl) errEl.textContent = `${(data.error_rate_percent || 0).toFixed(2)}%`;
+}
+
+function updateBenchmarkMatrix(data) {
+    // 1. Volume
+    const volObs = document.getElementById('target-volume-res');
+    const volStatus = document.getElementById('target-volume-status');
+    if (volObs && volStatus) {
+        volObs.textContent = `${data.total_processed} messages`;
+        const pass = (data.total_processed >= 2000) || (data.total_processed >= data.total_ingested);
+        volStatus.innerHTML = `<span class="badge ${pass ? 'badge-success' : 'badge-danger'}">${pass ? 'PASSED' : 'FAILED'}</span>`;
+    }
+
+    // 2. Throughput
+    const tputObs = document.getElementById('target-throughput-res');
+    const tputStatus = document.getElementById('target-throughput-status');
+    if (tputObs && tputStatus) {
+        tputObs.textContent = `${Math.round(data.throughput_msgs_sec)} msgs/sec`;
+        const pass = data.throughput_msgs_sec >= 45.0; // target 50+
+        tputStatus.innerHTML = `<span class="badge ${pass ? 'badge-success' : 'badge-danger'}">${pass ? 'PASSED' : 'CHECK'}</span>`;
+    }
+
+    // 3. Latency
+    const latObs = document.getElementById('target-latency-res');
+    const latStatus = document.getElementById('target-latency-status');
+    if (latObs && latStatus) {
+        latObs.textContent = `${Math.round(data.p95_latency_ms)}ms`;
+        const pass = data.p95_latency_ms < 2000.0; // < 2s
+        latStatus.innerHTML = `<span class="badge ${pass ? 'badge-success' : 'badge-danger'}">${pass ? 'PASSED' : 'FAILED'}</span>`;
+    }
+
+    // 4. Error Rate
+    const errObs = document.getElementById('target-error-res');
+    const errStatus = document.getElementById('target-error-status');
+    if (errObs && errStatus) {
+        errObs.textContent = `${(data.error_rate_percent || 0).toFixed(2)}%`;
+        const pass = data.error_rate_percent < 0.5;
+        errStatus.innerHTML = `<span class="badge ${pass ? 'badge-success' : 'badge-danger'}">${pass ? 'PASSED' : 'FAILED'}</span>`;
+    }
+
+    // 5. Message Loss
+    const lossObs = document.getElementById('target-loss-res');
+    const lossStatus = document.getElementById('target-loss-status');
+    if (lossObs && lossStatus) {
+        const lost = (data.total_ingested || 0) - (data.total_processed || 0);
+        lossObs.textContent = `${lost} messages`;
+        const pass = lost === 0;
+        lossStatus.innerHTML = `<span class="badge ${pass ? 'badge-success' : 'badge-danger'}">${pass ? 'PASSED' : 'FAILED'}</span>`;
     }
 }

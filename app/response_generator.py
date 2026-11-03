@@ -20,14 +20,22 @@ class ResponseGenerator:
         cited_sources: List[SourceReference],
         human_escalation_required: bool,
         reason_for_escalation: Optional[str],
-        execution_metadata: Optional[Dict[str, Any]] = None
+        execution_metadata: Optional[Dict[str, Any]] = None,
+        fast_mode: bool = False
     ) -> str:
         draft = ""
         provider_used = "mock"
         error_msg = None
         error_cat = None
 
-        if settings.LLM_PROVIDER == "openai":
+        if fast_mode:
+            draft = ResponseGenerator._generate_grounded_mock_draft(
+                customer_message, issue_category, detected_product,
+                purchase_channel, information_needed, cited_sources,
+                human_escalation_required, reason_for_escalation
+            )
+            provider_used = "mock"
+        elif settings.LLM_PROVIDER == "openai":
             if not settings.OPENAI_API_KEY or not settings.OPENAI_API_KEY.strip():
                 error_cat = "missing_credentials"
                 error_msg = "OPENAI_API_KEY environment variable is not configured."

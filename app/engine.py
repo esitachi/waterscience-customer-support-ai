@@ -115,7 +115,8 @@ class SupportEngine:
         channel: Optional[str] = None,
         customer_id: Optional[str] = None,
         message_id: Optional[str] = None,
-        product_hint: Optional[str] = None
+        product_hint: Optional[str] = None,
+        fast_mode: bool = False
     ) -> AutonomousResolutionResult:
         """
         Autonomous 3-Tier Resolution Processing:
@@ -208,7 +209,8 @@ class SupportEngine:
             cited_sources=cited_sources,
             human_escalation_required=escalate,
             reason_for_escalation=escalation_reason,
-            execution_metadata=meta
+            execution_metadata=meta,
+            fast_mode=fast_mode
         )
 
         # Append assistant response to context

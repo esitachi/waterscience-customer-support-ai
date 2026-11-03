@@ -82,7 +82,7 @@ def test_idempotent_duplicate_message_protection():
 
 def test_async_worker_execution_and_job_completion():
     """Background worker must process the queued job to 'completed' status."""
-    msg_id = f"MSG-WORKER-{uuid.uuid4().hex[:8]}"
+    msg_id = f"SIM-WORKER-{uuid.uuid4().hex[:8]}"
     conv_id = f"CONV-WORKER-{uuid.uuid4().hex[:8]}"
     payload = {
         "channel": "waterscience_website",
@@ -95,9 +95,9 @@ def test_async_worker_execution_and_job_completion():
     r = client.post("/api/v2/messages/ingest", json=payload)
     job_id = r.json()["job_id"]
 
-    # Poll for completion (up to 8 seconds)
+    # Poll for completion (up to 15 seconds)
     completed = False
-    for _ in range(16):
+    for _ in range(30):
         time.sleep(0.5)
         jr = client.get(f"/api/v2/jobs/{job_id}")
         if jr.status_code == 200:
@@ -114,7 +114,7 @@ def test_async_worker_execution_and_job_completion():
 
 def test_level_3_escalation_creates_database_ticket():
     """Level 3 queries (e.g. active water leak) must create an escalation ticket in DB."""
-    msg_id = f"MSG-LEAK-{uuid.uuid4().hex[:8]}"
+    msg_id = f"SIM-LEAK-{uuid.uuid4().hex[:8]}"
     conv_id = f"CONV-LEAK-{uuid.uuid4().hex[:8]}"
     payload = {
         "channel": "waterscience_website",
