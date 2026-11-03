@@ -15,6 +15,11 @@ class ReviewStatus(str, Enum):
     ESCALATED_TO_HUMAN = "escalated_to_human"
     READY_FOR_APPROVAL = "ready_for_approval"
 
+class ResolutionLevel(str, Enum):
+    LEVEL_1_AUTOMATIC = "level_1_automatic"      # Safe, evidence-grounded queries resolved autonomously
+    LEVEL_2_CONDITIONAL = "level_2_conditional"  # Clarification or conditional troubleshooting required
+    LEVEL_3_ESCALATED = "level_3_escalated"      # Safety, warranty disputes, unverified facts, human escalation
+
 class ApprovalStatus(str, Enum):
     PENDING_APPROVAL = "pending_approval"
     APPROVED = "approved"
@@ -49,11 +54,48 @@ class SupportCase(BaseModel):
     reason_for_escalation: Optional[str] = None
     review_status: ReviewStatus = ReviewStatus.READY_FOR_APPROVAL
     approval_status: ApprovalStatus = ApprovalStatus.PENDING_APPROVAL
+    resolution_level: ResolutionLevel = ResolutionLevel.LEVEL_1_AUTOMATIC
+    auto_dispatched: bool = False
     applied_guardrails: List[str] = []
     reviewer_comment: Optional[str] = None
     execution_provider: str = "mock"
     provider_error: Optional[str] = None
     provider_error_category: Optional[str] = None
+
+class ConversationMessage(BaseModel):
+    role: str = Field(..., description="'customer', 'assistant', or 'system'")
+    content: str
+    timestamp: str
+
+class TroubleshootingState(BaseModel):
+    attempts_count: int = 0
+    suggested_steps: List[str] = []
+    customer_feedback: Optional[str] = None
+    is_loop_detected: bool = False
+
+class ConversationContext(BaseModel):
+    conversation_id: str
+    customer_id: Optional[str] = None
+    channel: str = PurchaseChannel.WATERSCIENCE_WEBSITE.value
+    messages: List[ConversationMessage] = []
+    identified_product: Optional[str] = None
+    troubleshooting: TroubleshootingState = Field(default_factory=TroubleshootingState)
+
+class AutonomousResolutionResult(BaseModel):
+    case_id: str
+    conversation_id: Optional[str] = None
+    resolution_level: ResolutionLevel
+    status: str  # "auto_resolved", "awaiting_customer_reply", "escalated_to_human"
+    auto_dispatched: bool
+    response_text: str
+    cited_sources: List[SourceReference] = []
+    applied_guardrails: List[str] = []
+    reason_for_escalation: Optional[str] = None
+    information_needed: List[str] = []
+    dispatch_timestamp: Optional[str] = None
+    channel: str = PurchaseChannel.WATERSCIENCE_WEBSITE.value
+    execution_provider: str = "mock"
+    provider_error: Optional[str] = None
 
 class ApprovalActionRequest(BaseModel):
     action: str = Field(..., description="approve, reject, or edit")
@@ -73,3 +115,46 @@ class SyntheticCaseEvaluation(BaseModel):
     cited_sources: List[str]
     pass_status: bool
     evaluation_notes: List[str]
+
+class IngestMessageRequest(BaseModel):
+    channel: str = Field(..., description="Purchase / ingestion channel, e.g. waterscience_website, amazon, whatsapp")
+    customer_id: str = Field(..., description="Customer identifier")
+    conversation_id: str = Field(..., description="Conversation / session identifier")
+    message_id: str = Field(..., description="Unique message ID for deduplication / idempotency")
+    message: str = Field(..., description="Customer inquiry or message text")
+    timestamp: Optional[str] = Field(None, description="ISO timestamp of message arrival")
+
+class IngestMessageResponse(BaseModel):
+    status: str = Field(..., description="'accepted' or 'duplicate_ignored'")
+    message_id: str
+    conversation_id: str
+    job_id: Optional[str] = None
+    received_at: str
+
+class ProcessingJobStatus(BaseModel):
+    job_id: str
+    message_id: str
+    conversation_id: str
+    status: str = Field(..., description="'queued', 'processing', 'completed', 'failed', 'dead_letter'")
+    attempts: int = 0
+    resolution_level: Optional[str] = None
+    response_text: Optional[str] = None
+    auto_dispatched: Optional[bool] = None
+    error: Optional[str] = None
+    created_at: str
+    completed_at: Optional[str] = None
+
+class TicketSummary(BaseModel):
+    ticket_id: str
+    conversation_id: str
+    customer_id: str
+    status: str = "open"  # "open", "assigned", "resolved", "closed"
+    priority: str = "normal"  # "urgent", "high", "normal"
+    category: str
+    product: Optional[str] = None
+    escalation_reason: Optional[str] = None
+    assigned_to: Optional[str] = None
+    customer_message: Optional[str] = None
+    recommended_action: Optional[str] = None
+    created_at: str
+    resolved_at: Optional[str] = None

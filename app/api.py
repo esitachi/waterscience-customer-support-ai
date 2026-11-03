@@ -1,6 +1,7 @@
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -11,15 +12,37 @@ from app.models import (
     CustomerQueryRequest,
     SupportCase,
     ApprovalActionRequest,
-    SyntheticCaseEvaluation
+    SyntheticCaseEvaluation,
+    IngestMessageRequest,
+    IngestMessageResponse,
+    ProcessingJobStatus,
+    TicketSummary
 )
 from app.engine import get_support_engine
 from app.knowledge import get_knowledge_base
+from app.database import (
+    init_db,
+    SessionLocal,
+    MessageRecord,
+    ConversationRecord,
+    ProcessingJobRecord,
+    TicketRecord
+)
+from app.queue_manager import get_queue_manager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    queue_mgr = get_queue_manager()
+    queue_mgr.start_workers()
+    yield
+    queue_mgr.stop_workers()
 
 app = FastAPI(
-    title="WaterScience Customer Support AI",
-    description="Agent-assist customer query drafting and safety pipeline with mandatory human approval.",
-    version="1.0.0"
+    title="WaterScience Autonomous Customer Support Platform",
+    description="Scalable autonomous support engine with deterministic policy governance, asynchronous message queue, and URL-based knowledge management.",
+    version="2.0.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -359,3 +382,132 @@ def run_synthetic_tests():
         ))
 
     return results
+
+# -----------------------------------------------------------------------------
+# Phase 2: Asynchronous Message Ingestion & Scalable Processing APIs
+# -----------------------------------------------------------------------------
+
+@app.post("/api/v2/messages/ingest", response_model=IngestMessageResponse)
+def ingest_message(req: IngestMessageRequest):
+    """
+    Common normalized message ingestion API.
+    Validates payload, enforces idempotency, persists message, enqueues background job,
+    and returns an acknowledgment in <50ms.
+    """
+    queue_mgr = get_queue_manager()
+    res = queue_mgr.enqueue_message(req)
+    return res
+
+@app.get("/api/v2/jobs/{job_id}", response_model=ProcessingJobStatus)
+def get_job_status(job_id: str):
+    """Returns the persistent processing job state, attempts count, and resolution outcome."""
+    with SessionLocal() as db:
+        job = db.query(ProcessingJobRecord).filter_by(job_id=job_id).first()
+        if not job:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+        return ProcessingJobStatus(
+            job_id=job.job_id,
+            message_id=job.message_id,
+            conversation_id=job.conversation_id,
+            status=job.status,
+            attempts=job.attempts,
+            resolution_level=job.resolution_level,
+            response_text=job.response_text,
+            auto_dispatched=job.auto_dispatched,
+            error=job.error_message,
+            created_at=job.enqueued_at.isoformat() if job.enqueued_at else "",
+            completed_at=job.completed_at.isoformat() if job.completed_at else None
+        )
+
+@app.get("/api/v2/queue/stats")
+def get_queue_stats():
+    """Returns real-time queue depth, active workers, latency metrics, and failure counts."""
+    queue_mgr = get_queue_manager()
+    return queue_mgr.get_stats()
+
+@app.get("/api/v2/conversations/{conversation_id}")
+def get_conversation_history(conversation_id: str):
+    """Retrieves full conversation messages, current status, and resolution level."""
+    with SessionLocal() as db:
+        conv = db.query(ConversationRecord).filter_by(conversation_id=conversation_id).first()
+        if not conv:
+            raise HTTPException(status_code=404, detail=f"Conversation {conversation_id} not found")
+        
+        messages = db.query(MessageRecord).filter_by(conversation_id=conversation_id).order_by(MessageRecord.id.asc()).all()
+        tickets = db.query(TicketRecord).filter_by(conversation_id=conversation_id).all()
+
+        return {
+            "conversation_id": conv.conversation_id,
+            "customer_id": conv.customer_id,
+            "channel": conv.channel,
+            "status": conv.status,
+            "resolution_level": conv.resolution_level,
+            "messages": [
+                {
+                    "message_id": m.message_id,
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.timestamp,
+                    "processed": m.processed
+                }
+                for m in messages
+            ],
+            "tickets": [
+                {
+                    "ticket_id": t.ticket_id,
+                    "status": t.status,
+                    "priority": t.priority,
+                    "category": t.category,
+                    "escalation_reason": t.escalation_reason
+                }
+                for t in tickets
+            ]
+        }
+
+@app.get("/api/v2/tickets", response_model=List[TicketSummary])
+def list_tickets(status_filter: Optional[str] = None):
+    """Returns escalation tickets for the Support Operations Dashboard."""
+    with SessionLocal() as db:
+        q = db.query(TicketRecord)
+        if status_filter:
+            q = q.filter(TicketRecord.status == status_filter)
+        tickets = q.order_by(TicketRecord.created_at.desc()).all()
+        return [
+            TicketSummary(
+                ticket_id=t.ticket_id,
+                conversation_id=t.conversation_id,
+                customer_id=t.customer_id,
+                status=t.status,
+                priority=t.priority,
+                category=t.category,
+                product=t.product,
+                escalation_reason=t.escalation_reason,
+                assigned_to=t.assigned_to,
+                customer_message=t.customer_message,
+                recommended_action=t.recommended_action,
+                created_at=t.created_at.isoformat() if t.created_at else "",
+                resolved_at=t.resolved_at.isoformat() if t.resolved_at else None
+            )
+            for t in tickets
+        ]
+
+@app.post("/api/v2/tickets/{ticket_id}/action")
+def update_ticket_action(ticket_id: str, action: str, assigned_to: Optional[str] = None, note: Optional[str] = None):
+    """Updates a ticket status (assign, resolve, close)."""
+    with SessionLocal() as db:
+        ticket = db.query(TicketRecord).filter_by(ticket_id=ticket_id).first()
+        if not ticket:
+            raise HTTPException(status_code=404, detail=f"Ticket {ticket_id} not found")
+        
+        act = action.lower()
+        if act == "assign" and assigned_to:
+            ticket.assigned_to = assigned_to
+            ticket.status = "assigned"
+        elif act == "resolve":
+            ticket.status = "resolved"
+            ticket.resolved_at = datetime.now(timezone.utc)
+        elif act == "close":
+            ticket.status = "closed"
+            ticket.resolved_at = datetime.now(timezone.utc)
+        db.commit()
+        return {"status": "success", "ticket_id": ticket_id, "ticket_status": ticket.status}

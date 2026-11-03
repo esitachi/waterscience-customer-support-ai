@@ -1,6 +1,6 @@
 import re
 from typing import List, Dict, Any, Optional, Tuple
-from app.models import PurchaseChannel, ReviewStatus
+from app.models import PurchaseChannel, ReviewStatus, ResolutionLevel, TroubleshootingState
 
 class PolicyRulesEngine:
     """
@@ -88,7 +88,7 @@ class PolicyRulesEngine:
 
         # Guardrail 4: Leakage / Physical Damage / Product Fault / Electrical Hazard / Warranty Claim / Social Engineering
         if issue_category in ["leak_after_maintenance", "product_fault", "damaged_on_arrival", "warranty_claim"] or any(
-            w in t for w in ["leak", "leaking", "spraying", "drip", "seeping", "burst", "paani leak", "broken", "cracked", "crack", "damage", "damaged", "trigger work nahi", "electrical socket", "replacement unit", "send a replacement"]
+            w in t for w in ["leak", "leaking", "spraying", "drip", "seeping", "burst", "flood", "flooding", "paani leak", "broken", "cracked", "crack", "damage", "damaged", "trigger work nahi", "electrical socket", "replacement unit", "send a replacement"]
         ):
             applied_guardrails.append("Safety & Damage Guardrail: Collect evidence (photo/video), instruct shut-off if needed, escalate to human")
             escalate = True
@@ -229,3 +229,34 @@ class PolicyRulesEngine:
             applied_guardrails.append("Consumable Lifecycle Guardrail: Top-load 3-4 months, front-load 4-6 months; depends on water quality and usage")
 
         return escalate, escalation_reason, information_needed, applied_guardrails, review_status
+
+    @staticmethod
+    def determine_resolution_tier(
+        escalate: bool,
+        review_status: ReviewStatus,
+        information_needed: List[str],
+        troubleshooting_state: Optional[TroubleshootingState] = None
+    ) -> Tuple[ResolutionLevel, Optional[str]]:
+        """
+        Maps policy evaluation outcomes to the 3-Tier Resolution Level:
+        - Level 3: Mandatory Human Escalation (Safety, conflicts, warranty/refund exceptions, unverified mappings)
+        - Level 2: Conditional Troubleshooting / Clarification (Missing critical info, interactive steps)
+        - Level 1: Automatic Resolution (Safe, verified, evidence-backed answers dispatched autonomously)
+        
+        Also prevents circular troubleshooting: if attempt_count >= 2 and issue persists,
+        automatically escalates to Level 3.
+        """
+        # Circular troubleshooting loop prevention
+        if troubleshooting_state and troubleshooting_state.attempts_count >= 2:
+            return (
+                ResolutionLevel.LEVEL_3_ESCALATED,
+                "Unresolved issue after multiple troubleshooting attempts (circular loop prevention)."
+            )
+
+        if escalate or review_status == ReviewStatus.ESCALATED_TO_HUMAN:
+            return ResolutionLevel.LEVEL_3_ESCALATED, None
+
+        if review_status == ReviewStatus.NEEDS_CLARIFICATION:
+            return ResolutionLevel.LEVEL_2_CONDITIONAL, None
+
+        return ResolutionLevel.LEVEL_1_AUTOMATIC, None

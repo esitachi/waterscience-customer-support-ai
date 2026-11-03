@@ -10,5 +10,8 @@ venv/
 .vscode/
 .idea/
 *.zip
+*.db
+*.sqlite
+*.sqlite3
 scratch/
 scratch_*

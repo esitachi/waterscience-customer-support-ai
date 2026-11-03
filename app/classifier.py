@@ -121,7 +121,7 @@ class IssueClassifier:
             source_ids = ["S09", "S03"]
 
         # Leak after maintenance / plumbing & electrical hazard (Safety critical)
-        elif any(w in t for w in ["leak", "leaking", "spraying", "drip", "seeping", "burst", "paani leak", "beech se paani", "leakage"]):
+        elif any(w in t for w in ["leak", "leaking", "spraying", "drip", "seeping", "burst", "flood", "flooding", "paani leak", "beech se paani", "leakage"]):
             category = "leak_after_maintenance"
             source_ids = ["S02", "M01", "S03"]
 

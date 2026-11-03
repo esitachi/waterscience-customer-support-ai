@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gpt-4o-mini"
     LLM_TEMPERATURE: float = 0.0
 
+    # Scalable Infrastructure Settings
+    DATABASE_URL: str = "sqlite:///./waterscience_support.db"
+    REDIS_URL: str = "redis://127.0.0.1:6379/0"
+    WORKER_CONCURRENCY: int = 4
+    MAX_JOB_RETRIES: int = 3
+    JOB_TIMEOUT_SECONDS: int = 30
+    RATE_LIMIT_DELAY_SECONDS: float = 0.05
+    EMERGENCY_AUTOMATION_PAUSED: bool = False
+
     # Paths
     KNOWLEDGE_BASE_PATH: Path = RESEARCH_DIR / "product_knowledge_base.json"
     SYNTHETIC_CASES_PATH: Path = RESEARCH_DIR / "synthetic_support_cases.json"
